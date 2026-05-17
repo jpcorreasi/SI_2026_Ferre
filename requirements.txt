@@ -1,0 +1,10 @@
+Django==6.0.4
+djangorestframework
+djangorestframework-simplejwt
+django-encrypted-model-fields
+django-cors-headers
+django-environ
+django-filter
+psycopg2-binary
+reportlab
+Pillow

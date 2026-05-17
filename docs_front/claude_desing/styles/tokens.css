@@ -1,0 +1,169 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Ferretería · Design Tokens (CaD — code as design)
+   Source of truth: src/design/tokens.ts (mirror) — exposed here as CSS vars.
+   Never hardcode hex or px in components. Always read from var(--token).
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* surfaces */
+  --surface: #FFFFFF;
+  --surface-elevated: #FAFAFA;
+  --surface-sunken: #F4F4F5;
+
+  /* borders */
+  --border: #E4E4E7;
+  --border-strong: #D4D4D8;
+
+  /* text */
+  --fg: #18181B;          /* 16:1 on surface */
+  --fg-muted: #52525B;    /* 4.6:1 — body secondary */
+  --fg-subtle: #71717A;   /* only for ≥18px or ≥14px bold */
+
+  /* accent (mutable via Tweaks) */
+  --accent: #2563EB;      /* 4.55:1 on white */
+  --accent-hover: #1D4ED8;
+  --accent-fg: #FFFFFF;
+  --accent-soft: #DBEAFE;
+  --accent-soft-fg: #1E40AF;
+
+  /* state */
+  --success: #16A34A;
+  --success-soft: #DCFCE7;
+  --success-soft-fg: #166534;
+  --warning: #B45309;
+  --warning-soft: #FEF3C7;
+  --warning-soft-fg: #92400E;
+  --danger: #DC2626;
+  --danger-soft: #FEE2E2;
+  --danger-soft-fg: #991B1B;
+  --info: #0369A1;
+  --info-soft: #E0F2FE;
+  --info-soft-fg: #075985;
+
+  /* focus */
+  --focus: var(--accent);
+  --focus-ring: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent);
+
+  /* type — base 16 */
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system,
+               "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Mono",
+               Consolas, "Liberation Mono", monospace;
+
+  --fs-xs:   0.75rem;   --lh-xs:   1rem;       /* 12/16 */
+  --fs-sm:   0.875rem;  --lh-sm:   1.25rem;    /* 14/20 */
+  --fs-base: 1rem;      --lh-base: 1.5rem;     /* 16/24 — inputs */
+  --fs-lg:   1.125rem;  --lh-lg:   1.75rem;    /* 18/28 */
+  --fs-xl:   1.25rem;   --lh-xl:   1.75rem;    /* 20/28 */
+  --fs-2xl:  1.5rem;    --lh-2xl:  2rem;       /* 24/32 — h1 mobile */
+  --fs-3xl:  1.875rem;  --lh-3xl:  2.25rem;    /* 30/36 — h1 desktop */
+  --fs-4xl:  2.25rem;   --lh-4xl:  2.5rem;     /* 36/40 — KPI hero */
+
+  /* spacing — 4pt scale */
+  --sp-1: 4px;   --sp-2: 8px;   --sp-3: 12px;  --sp-4: 16px;
+  --sp-5: 20px;  --sp-6: 24px;  --sp-8: 32px;  --sp-10: 40px;
+  --sp-12: 48px; --sp-16: 64px;
+
+  /* radii */
+  --r-sm: 6px;  --r-md: 8px;  --r-lg: 12px;  --r-xl: 16px;  --r-full: 9999px;
+
+  /* shadows */
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.04);
+  --elev-2: 0 4px 12px rgb(0 0 0 / 0.06);
+  --elev-3: 0 12px 32px rgb(0 0 0 / 0.10);
+
+  /* motion */
+  --t-fast: 120ms;
+  --t-base: 180ms;
+  --t-slow: 240ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* z-index */
+  --z-sticky: 50;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+
+  /* hit targets */
+  --hit-min: 44px;
+  --hit-primary: 48px;
+
+  /* breakpoints (informational — used in JS) */
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+
+  /* density */
+  --dense-cell-py: 12px;
+}
+
+[data-density="compact"] {
+  --dense-cell-py: 8px;
+}
+
+[data-theme="dark"] {
+  --surface: #0A0A0B;
+  --surface-elevated: #18181B;
+  --surface-sunken: #09090B;
+
+  --border: #27272A;
+  --border-strong: #3F3F46;
+
+  --fg: #FAFAFA;
+  --fg-muted: #A1A1AA;
+  --fg-subtle: #71717A;
+
+  --accent-hover: #3B82F6;
+  --accent-soft: #1E3A8A;
+  --accent-soft-fg: #DBEAFE;
+
+  --success: #22C55E;
+  --success-soft: #052E16;
+  --success-soft-fg: #86EFAC;
+  --warning: #F59E0B;
+  --warning-soft: #451A03;
+  --warning-soft-fg: #FCD34D;
+  --danger: #EF4444;
+  --danger-soft: #450A0A;
+  --danger-soft-fg: #FCA5A5;
+  --info: #38BDF8;
+  --info-soft: #082F49;
+  --info-soft-fg: #BAE6FD;
+
+  --elev-1: 0 1px 2px rgb(0 0 0 / 0.5);
+  --elev-2: 0 4px 12px rgb(0 0 0 / 0.5);
+  --elev-3: 0 12px 32px rgb(0 0 0 / 0.6);
+}
+
+/* accent palette swap — applied by Tweaks via [data-accent="..."] */
+[data-accent="orange"] {
+  --accent: #EA580C;
+  --accent-hover: #C2410C;
+  --accent-soft: #FFEDD5;
+  --accent-soft-fg: #9A3412;
+}
+[data-theme="dark"][data-accent="orange"] {
+  --accent-soft: #431407;
+  --accent-soft-fg: #FED7AA;
+}
+[data-accent="red"] {
+  --accent: #DC2626;
+  --accent-hover: #B91C1C;
+  --accent-soft: #FEE2E2;
+  --accent-soft-fg: #991B1B;
+}
+[data-theme="dark"][data-accent="red"] {
+  --accent-soft: #450A0A;
+  --accent-soft-fg: #FCA5A5;
+}
+[data-accent="green"] {
+  --accent: #15803D;
+  --accent-hover: #166534;
+  --accent-soft: #DCFCE7;
+  --accent-soft-fg: #14532D;
+}
+[data-theme="dark"][data-accent="green"] {
+  --accent-soft: #052E16;
+  --accent-soft-fg: #86EFAC;
+}

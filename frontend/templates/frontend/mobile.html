@@ -1,0 +1,3772 @@
+<!doctype html>
+<html lang="es-co">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="description" content="Ferretería — Punto de venta y gestión de inventario">
+  <title>Ferretería — Sistema de Gestión</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    /* ── Design tokens (mirror /index.html so /m/ matches the SPA) ── */
+    :root {
+      --surface:         #FFFFFF;
+      --surface-elevated:#FAFAFA;
+      --surface-sunken:  #F4F4F5;
+
+      --border:        #E4E4E7;
+      --border-strong: #D4D4D8;
+
+      --fg:        #18181B;
+      --fg-muted:  #52525B;
+      --fg-subtle: #71717A;
+
+      --accent:        #2563EB;
+      --accent-hover:  #1D4ED8;
+      --accent-fg:     #FFFFFF;
+      --accent-soft:   #DBEAFE;
+      --accent-soft-fg:#1E40AF;
+
+      --success:        #16A34A;
+      --success-soft:   #DCFCE7;
+      --success-soft-fg:#166534;
+      --warning:        #B45309;
+      --warning-soft:   #FEF3C7;
+      --warning-soft-fg:#92400E;
+      --danger:         #DC2626;
+      --danger-soft:    #FEE2E2;
+      --danger-soft-fg: #991B1B;
+      --money:          #16A34A;
+
+      --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+      --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+      --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+      --elev-1: 0 1px 2px rgb(0 0 0 / 0.04);
+      --elev-2: 0 4px 12px rgb(0 0 0 / 0.06);
+
+      --hit-min: 44px;
+      --hit-primary: 48px;
+
+      /* Legacy aliases — feature blocks below were written against
+         indigo/lavender/amber tokens before the harmonization;
+         map them to the SPA palette so the visual story stays consistent. */
+      --ink:           var(--fg);
+      --ink-soft:      var(--fg-muted);
+      --line:          var(--border-strong);
+      --indigo:        var(--accent);
+      --indigo-deep:   var(--accent-hover);
+      --lavender:      var(--surface-elevated);
+      --lavender-soft: var(--surface-sunken);
+      --amber:         var(--accent);
+      --amber-deep:    var(--accent-hover);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      color: var(--fg);
+    }
+    body {
+      background: var(--surface-sunken);
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+    }
+
+    /* ── Topbar (matches SPA #topbar) ─────────────────────────────── */
+    .app-header {
+      background: var(--surface);
+      color: var(--fg);
+      padding: 0 var(--sp-3);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      min-height: 56px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .app-header h1 {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      flex: 1;
+      margin: 0;
+    }
+    .app-header h1 .brand-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 28px; height: 28px;
+      border-radius: var(--r-md);
+      background: var(--accent);
+      color: var(--accent-fg);
+      font-weight: 700;
+      font-size: 14px;
+      margin-right: var(--sp-2);
+      vertical-align: -7px;
+    }
+
+    .icon-btn {
+      min-width: var(--hit-min);
+      min-height: var(--hit-min);
+      display: inline-grid;
+      place-items: center;
+      border-radius: var(--r-md);
+      background: transparent;
+      color: var(--fg-muted);
+      border: 0;
+      cursor: pointer;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    .icon-btn:hover { background: var(--surface-sunken); color: var(--fg); }
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    /* ── Tile (menu cards) ───────────────────────────────────────── */
+    .card-tile {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--sp-4) var(--sp-5);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--fg);
+      cursor: pointer;
+      text-align: left;
+      min-height: 64px;
+      box-shadow: var(--elev-1);
+      transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+    }
+    .card-tile:hover { border-color: var(--border-strong); box-shadow: var(--elev-2); }
+    .card-tile:active { background: var(--surface-sunken); }
+    .card-tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .card-tile svg { flex-shrink: 0; color: var(--accent); }
+    .card-tile .tile-icon {
+      display: inline-grid; place-items: center;
+      width: 40px; height: 40px;
+      border-radius: var(--r-md);
+      background: var(--accent-soft); color: var(--accent-soft-fg);
+      flex-shrink: 0;
+    }
+    .card-tile .tile-icon svg { color: inherit; width: 22px; height: 22px; }
+
+    /* ── Form fields ─────────────────────────────────────────────── */
+    .field-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--fg);
+      margin-bottom: var(--sp-1);
+      display: block;
+    }
+    .field-input {
+      width: 100%;
+      min-height: var(--hit-min);
+      padding: 10px var(--sp-3);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--r-md);
+      font-size: 1rem;
+      background: var(--surface);
+      color: var(--fg);
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+    .field-input::placeholder { color: var(--fg-subtle); }
+    .field-input:focus {
+      outline: 0;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 20%, transparent);
+    }
+    .field-hint  { font-size: 0.75rem; color: var(--fg-subtle); margin-top: var(--sp-1); }
+    .field-error { font-size: 0.875rem; color: var(--danger); margin-top: var(--sp-1); }
+
+    /* ── Primary button (matches SPA .btn-primary / .login-btn) ──── */
+    .btn-primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border: 0;
+      border-radius: var(--r-md);
+      min-height: var(--hit-primary);
+      padding: 10px var(--sp-5);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 120ms ease;
+    }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn-primary:focus-visible {
+      outline: 0;
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 30%, transparent);
+    }
+
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
+    /* ── Login screen (mirrors SPA #login-screen) ────────────────── */
+    .login-screen {
+      min-height: 100dvh;
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--sp-4);
+      background: var(--surface-sunken);
+    }
+    .login-wrap { width: 100%; max-width: 400px; }
+    .login-header { text-align: center; margin-bottom: var(--sp-6); }
+    .login-brand-mark {
+      width: 56px; height: 56px;
+      border-radius: var(--r-lg);
+      background: var(--accent); color: var(--accent-fg);
+      display: grid; place-items: center;
+      font-size: 24px; font-weight: 700;
+      margin: 0 auto var(--sp-3);
+      letter-spacing: -0.02em;
+    }
+    .login-header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--fg);
+      margin: 0;
+    }
+    .login-header p {
+      color: var(--fg-muted);
+      font-size: 0.875rem;
+      margin-top: var(--sp-1);
+    }
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      padding: var(--sp-6);
+      box-shadow: var(--elev-2);
+      display: flex; flex-direction: column;
+      gap: var(--sp-4);
+    }
+    .login-card h2 {
+      font-size: 1.125rem; font-weight: 600;
+      color: var(--fg); margin: 0;
+    }
+
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%);
+      background: var(--ink); color: #fff; padding: 12px 18px;
+      border-radius: 999px; font-size: 14px; z-index: 100;
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+    }
+    .toast.toast-error { background: var(--danger); }
+
+    /* ── Sales flow ────────────────────────────────────────────────── */
+    .search-pill {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--lavender); border-radius: 999px;
+      padding: 10px 16px;
+    }
+    .search-pill input {
+      flex: 1; border: 0; background: transparent; outline: none;
+      font-size: 16px; min-height: 28px;
+    }
+    .search-pill button.clear {
+      border: 0; background: transparent; cursor: pointer;
+      min-width: 32px; min-height: 32px; color: var(--ink);
+    }
+    .result-list {
+      background: var(--lavender); border-radius: 14px;
+      padding: 6px 0; margin-top: 12px;
+      max-height: 60vh; overflow-y: auto;
+    }
+    .result-list li { list-style: none; }
+    .result-list button {
+      width: 100%; text-align: left;
+      padding: 14px 20px; background: transparent; border: 0;
+      font-size: 16px; color: var(--ink); cursor: pointer;
+      border-radius: 8px; min-height: var(--hit);
+    }
+    .result-list button:active { background: #C7D2FE; }
+    .result-list .empty { padding: 20px; text-align: center; color: var(--ink-soft); font-size: 14px; }
+
+    .customer-strip {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; border-bottom: 1px solid #F3E8F0;
+    }
+    .customer-strip .label { font-size: 14px; color: var(--ink-soft); }
+    .customer-strip .name { font-size: 16px; font-weight: 500; }
+
+    .cart-row {
+      display: grid;
+      grid-template-columns: 1fr 110px 56px;
+      align-items: center; column-gap: 8px;
+      padding: 12px 0; border-bottom: 1px solid var(--line);
+    }
+    .cart-row .pname { font-size: 18px; font-weight: 500; }
+    .cart-row .qty { font-size: 14px; color: var(--ink-soft); }
+    .cart-row .price { font-size: 17px; color: var(--money); font-weight: 600; text-align: right; }
+    .cart-row .trash {
+      width: 44px; height: 44px; border-radius: 999px;
+      background: var(--danger); color: #fff; border: 0;
+      display: grid; place-items: center; cursor: pointer; justify-self: end;
+    }
+    .cart-row .trash:active { background: #991B1B; }
+
+    .add-tile {
+      width: 100%; min-height: 52px;
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--r-md);
+      background: var(--surface);
+      color: var(--accent);
+      display: grid; place-items: center;
+      cursor: pointer; margin: var(--sp-4) 0;
+      transition: background 120ms ease, border-color 120ms ease;
+    }
+    .add-tile:hover  { background: var(--accent-soft); border-color: var(--accent); }
+    .add-tile:active { background: color-mix(in oklab, var(--accent-soft) 80%, var(--accent) 20%); }
+
+    .product-row {
+      display: grid; grid-template-columns: 1fr 64px; gap: 12px;
+      align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line);
+    }
+    .product-row .pname { font-size: 18px; font-weight: 600; }
+    .product-row .pdesc { font-size: 13px; color: var(--ink-soft); }
+    .product-row .pprice { font-size: 16px; color: var(--money); font-weight: 600; margin-top: 2px; }
+    .product-row .add-cart {
+      width: 56px; height: 56px; border-radius: 999px;
+      background: var(--amber); color: var(--ink); border: 0;
+      display: grid; place-items: center; cursor: pointer;
+    }
+    .product-row .add-cart:active { background: var(--amber-deep); }
+
+    .total-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 14px 0; border-top: 2px solid var(--ink); margin-top: 12px;
+    }
+    .total-row .label { font-size: 22px; font-weight: 600; }
+    .total-row .value { font-size: 22px; font-weight: 700; }
+
+    /* Simplified: the wireframe's "Confirmar" knob+slider
+       does not exist in the SPA. We render it as a flat primary button
+       to match /index.html. The .knob span is hidden so existing HTML
+       (which still contains it) stays valid. */
+    .confirm-bar {
+      display: block;
+      margin-top: var(--sp-4);
+    }
+    .confirm-bar .knob { display: none; }
+    .confirm-bar button {
+      width: 100%;
+      min-height: var(--hit-primary);
+      padding: 10px var(--sp-5);
+      background: var(--border-strong);
+      color: var(--fg-muted);
+      border: 0;
+      border-radius: var(--r-md);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: not-allowed;
+      transition: background 120ms ease;
+    }
+    .confirm-bar.ready button {
+      background: var(--accent);
+      color: var(--accent-fg);
+      cursor: pointer;
+    }
+    .confirm-bar.ready button:hover { background: var(--accent-hover); }
+    .confirm-bar.busy { opacity: 0.6; pointer-events: none; }
+
+    .select-field {
+      width: 100%; min-height: var(--hit); padding: 12px 14px;
+      border: 1px solid var(--line); border-radius: 10px;
+      font-size: 16px; background: #fff; color: var(--ink);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%231F2937' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+    }
+    .select-field:focus { outline: 2px solid var(--indigo); border-color: var(--indigo); }
+
+    /* ── Bottom sheet ──────────────────────────────────────────────── */
+    .sheet-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: grid; place-items: end center;
+      z-index: 200;
+    }
+    .sheet {
+      width: 100%; max-width: 480px;
+      background: var(--lavender);
+      border-radius: 18px 18px 0 0;
+      padding: 18px 18px 28px;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: 0 -8px 24px rgb(0 0 0 / 0.18);
+    }
+    @media (min-width: 768px) {
+      .sheet-backdrop { place-items: center; }
+      .sheet { border-radius: 18px; max-width: 360px; }
+    }
+    .sheet header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 10px;
+    }
+    .sheet header h3 { font-size: 17px; font-weight: 600; }
+    .sheet button.option {
+      width: 100%; text-align: left; padding: 16px 8px;
+      border: 0; background: transparent; border-top: 1px solid #C7D2FE;
+      font-size: 17px; color: var(--ink); cursor: pointer; min-height: var(--hit);
+    }
+    .sheet button.option:first-of-type { border-top: 0; }
+    .sheet button.option:active { background: #C7D2FE; }
+
+    /* select-style trigger that opens the bottom-sheet */
+    .sheet-trigger {
+      width: 100%; min-height: var(--hit);
+      padding: 12px 14px; border-radius: 999px;
+      background: var(--lavender-soft); border: 0;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 16px; color: var(--ink); cursor: pointer;
+      text-align: left;
+    }
+    .sheet-trigger .chev { margin-left: auto; }
+    .sheet-trigger.empty { color: #6B7280; }
+    .sheet-trigger:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+
+    /* ── Day pills (L M M J V S D) ─────────────────────────────────── */
+    .day-pills { display: flex; justify-content: space-between; gap: 6px; }
+    .day-pill {
+      width: 44px; height: 44px; border-radius: 999px;
+      background: #D1D5DB; color: #4B5563;
+      border: 0; font-size: 18px; font-weight: 700; cursor: pointer;
+      font-style: italic;
+    }
+    .day-pill[aria-pressed="true"] {
+      background: var(--indigo); color: #fff;
+    }
+    .day-pill:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+    .time-cluster { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end; }
+    .time-cluster .field-label { text-align: center; }
+    .time-cluster input { text-align: center; font-size: 22px; font-weight: 600; font-style: italic; }
+
+    .form-section-title {
+      font-size: 18px; font-weight: 600; text-align: center;
+      margin: 20px 0 8px;
+    }
+
+    /* ── Stock list ────────────────────────────────────────────────── */
+    .filter-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 999px;
+      background: var(--lavender); color: var(--ink);
+      border: 0; font-size: 14px; font-weight: 600; cursor: pointer;
+      min-height: 38px;
+    }
+    .filter-pill:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+    .filter-pill .count {
+      background: var(--indigo); color: #fff; font-size: 11px;
+      padding: 1px 7px; border-radius: 999px; font-weight: 700;
+    }
+
+    .stock-row {
+      display: grid;
+      grid-template-columns: 1fr auto 56px;
+      align-items: center; column-gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid var(--line);
+    }
+    .stock-row .pname { font-size: 18px; font-weight: 600; }
+    .stock-row .pmeta { font-size: 13px; color: var(--ink-soft); }
+    .stock-row .pprice { font-size: 14px; color: var(--money); font-weight: 600; margin-top: 2px; }
+    .stock-row .stock-badge {
+      font-size: 16px; font-weight: 700; color: var(--money);
+      text-align: right; white-space: nowrap;
+    }
+    .stock-row .stock-badge.low  { color: var(--warning); }
+    .stock-row .stock-badge.out  { color: var(--danger); }
+    .stock-row .edit-btn {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--amber); color: var(--ink); border: 0;
+      display: grid; place-items: center; cursor: pointer; justify-self: end;
+    }
+    .stock-row .edit-btn:active { background: var(--amber-deep); }
+
+    /* ── Stock counter (Bodega/Almacén-style +/-) ──────────────────── */
+    .qty-stepper {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+    }
+    .qty-stepper label { font-size: 16px; font-weight: 600; }
+    .qty-stepper .value {
+      background: #D1D5DB; color: var(--ink);
+      font-size: 22px; font-weight: 700; text-align: center;
+      padding: 8px; border-radius: 12px; border: 0;
+      width: 100%; min-height: var(--hit);
+      font-style: italic;
+    }
+    .qty-stepper .steps { display: grid; gap: 4px; }
+    .qty-stepper .step-btn {
+      width: 36px; height: 24px; border-radius: 8px;
+      background: #E5E7EB; color: var(--ink); border: 0;
+      display: grid; place-items: center; cursor: pointer;
+    }
+    .qty-stepper .step-btn:active { background: #D1D5DB; }
+
+    /* ── PO Receive checkbox row ───────────────────────────────────── */
+    .recv-row {
+      display: grid;
+      grid-template-columns: 1fr 110px 48px;
+      align-items: center; column-gap: 8px;
+      padding: 14px 0; border-bottom: 1px solid var(--line);
+    }
+    .recv-row .pname { font-size: 17px; font-weight: 500; }
+    .recv-row .qty { font-size: 14px; color: var(--ink-soft); }
+    .recv-row .price { font-size: 16px; color: var(--money); font-weight: 600; text-align: right; }
+    .recv-row .chk {
+      width: 36px; height: 36px; border-radius: 8px;
+      border: 2px solid var(--ink); background: #fff;
+      display: grid; place-items: center; cursor: pointer; justify-self: end;
+      color: var(--ink);
+    }
+    .recv-row .chk[aria-pressed="true"] {
+      background: var(--indigo); border-color: var(--indigo); color: #fff;
+    }
+    .recv-row .chk:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+    /* ── Supplier row ──────────────────────────────────────────────── */
+    .supplier-row {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      align-items: center; column-gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .supplier-row .sname { font-size: 18px; font-weight: 600; }
+    .supplier-row .smeta { font-size: 13px; color: var(--ink-soft); }
+    .supplier-row .savatar {
+      width: 48px; height: 48px; border-radius: 999px;
+      background: var(--indigo); color: #fff;
+      display: grid; place-items: center;
+    }
+    .supplier-row:active { background: var(--lavender-soft); }
+
+    /* ── PO row (pendientes de recibir) ────────────────────────────── */
+    .po-row {
+      display: grid;
+      grid-template-columns: 1fr 56px;
+      align-items: center; column-gap: 12px;
+      padding: 14px 0; border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .po-row .savatar {
+      width: 48px; height: 48px; border-radius: 999px;
+      background: var(--indigo); color: #fff;
+      display: grid; place-items: center;
+    }
+
+    /* ── KPI tiles (Caja balance) ──────────────────────────────────── */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .kpi {
+      background: var(--lavender); border-radius: 14px;
+      padding: 14px 16px;
+    }
+    .kpi .lbl { font-size: 12px; color: var(--ink-soft); font-weight: 500; }
+    .kpi .val { font-size: 22px; font-weight: 700; margin-top: 2px; }
+    .kpi.balance { background: #DCFCE7; }
+    .kpi.balance .val { color: #166534; }
+    .kpi.income  .val { color: var(--money); }
+    .kpi.expense .val { color: var(--danger); }
+    .kpi.diff.positive .val { color: var(--money); }
+    .kpi.diff.negative .val { color: var(--danger); }
+
+    .status-pill {
+      display: inline-block; padding: 4px 12px; border-radius: 999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .status-pill.open   { background: #DCFCE7; color: #166534; }
+    .status-pill.closed { background: var(--lavender); color: var(--ink); }
+
+    @media (min-width: 768px) {
+      #app { max-width: 480px; margin: 0 auto; box-shadow: 0 0 0 1px var(--line); min-height: 100vh; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" role="main" aria-live="polite"></main>
+
+  <script>
+    'use strict';
+
+    // ── Constants ────────────────────────────────────────────────────────────
+    const TOKEN_KEY    = 'ferreteria_access';
+    const REFRESH_KEY  = 'ferreteria_refresh';
+    const USER_KEY     = 'ferreteria_user';
+    const ROLE_KEY     = 'ferreteria_role';
+    const FULLNAME_KEY = 'ferreteria_fullname';
+
+    // ── State ────────────────────────────────────────────────────────────────
+    const state = {
+      route: '',
+      user: localStorage.getItem(USER_KEY) || null,
+      role: localStorage.getItem(ROLE_KEY) || null,
+      fullName: localStorage.getItem(FULLNAME_KEY) || null,
+      cart: {
+        customer: null,          // { id, full_name } | null (null = "Venta al Público")
+        is_anonymous: false,
+        items: [],               // [{ product_id, name, unit_price, quantity }]
+        payment_method: null,    // { id, name } | null
+        pending_product: null,   // product object selected, awaiting qty
+      },
+      paymentMethods: null,      // cached [{ id, name }]
+      invoiceFlow: {
+        date: '',                // YYYY-MM-DD
+        timeFrom: '',            // HH:MM
+        timeTo: '',              // HH:MM
+        results: null,           // [Sale] | null
+        selectedSale: null,      // Sale object
+      },
+      cliente: {
+        full_name: '', document_type: '', document_number: '',
+        phone: '', email: '',
+      },
+      empleado: {
+        full_name: '', document_type: '', document_number: '',
+        phone: '', position: '', hire_date: '', base_salary: '',
+        username: '', password: '',
+        days: [],                // [1..7] WorkShift.Day values
+        start_time: '', end_time: '',
+      },
+      stock: {
+        search: '',
+        filters: {               // applied filters
+          category: null,        // { id, name } | null
+          min_price: '',
+          max_price: '',
+          is_active: '',         // '' | 'true' | 'false'
+        },
+        results: null,           // [Product] | null
+        categories: null,        // cached [{id, name}]
+      },
+      productEdit: {
+        id: null,                // null = create mode
+        code: '', name: '', description: '',
+        category: null,          // { id, name }
+        sale_price: '', cost_price: '',
+        stock: 0, min_stock: 5,
+        is_active: true,
+      },
+      poCart: {
+        supplier: null,          // { id, business_name }
+        items: [],               // [{ product_id, name, unit_cost, quantity }]
+        pending_product: null,   // product object awaiting qty + unit_cost
+        notes: '',
+      },
+      poReceive: {
+        order: null,             // PurchaseOrder object
+        checked: {},             // { itemId: true } visual confirmation
+      },
+      newSupplier: {
+        business_name: '', nit: '',
+        contact_name: '', phone: '', email: '', address: '',
+      },
+      caja: {
+        active: null,            // open CashRegister | null
+        balance: null,           // { opening_amount, income, expense, balance, status }
+        history: null,           // [CashRegister]
+        opening_amount: '',      // form buffer (abrir)
+        withdraw: { amount: '', concept: '' },
+        closing_amount: '',
+        lastClosed: null,        // result of close() to display difference
+      },
+    };
+
+    // In-memory store of objects looked up by id, so we never need to
+    // round-trip them through HTML data-attributes (XSS-safe).
+    const _rows = { customers: {}, products: {}, suppliers: {}, purchaseOrders: {} };
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function esc(s) {
+      if (s === null || s === undefined) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    const $ = (sel, root = document) => root.querySelector(sel);
+
+    function toast(msg, kind) {
+      document.querySelectorAll('.toast').forEach(t => t.remove());
+      const el = document.createElement('div');
+      el.className = 'toast' + (kind === 'error' ? ' toast-error' : '');
+      el.textContent = msg;
+      el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 3200);
+    }
+
+    // Single-flight refresh — if 401 hits multiple in-flight requests,
+    // we refresh once and let them all retry with the new token.
+    let _refreshPromise = null;
+    async function refreshAccessToken() {
+      if (_refreshPromise) return _refreshPromise;
+      const refresh = localStorage.getItem(REFRESH_KEY);
+      if (!refresh) throw new Error('no refresh token');
+      _refreshPromise = (async () => {
+        try {
+          const res = await fetch('/api/token/refresh/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh }),
+          });
+          if (!res.ok) throw new Error('refresh failed: ' + res.status);
+          const d = await res.json();
+          localStorage.setItem(TOKEN_KEY, d.access);
+          if (d.refresh) localStorage.setItem(REFRESH_KEY, d.refresh);
+          return d.access;
+        } finally {
+          _refreshPromise = null;
+        }
+      })();
+      return _refreshPromise;
+    }
+
+    async function api(path, opts = {}, _retried = false) {
+      opts.headers = Object.assign({}, opts.headers || {});
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+      if (opts.body && !(opts.body instanceof FormData)) {
+        opts.headers['Content-Type'] = 'application/json';
+        if (typeof opts.body !== 'string') opts.body = JSON.stringify(opts.body);
+      }
+      const res = await fetch(path, opts);
+
+      // Auto-refresh on 401 once per call (skip the refresh endpoint itself)
+      if (res.status === 401 && !_retried && !path.startsWith('/api/token/')) {
+        try {
+          await refreshAccessToken();
+          // Body may have been consumed if it was a string; rebuild headers
+          // since the Authorization header just changed.
+          return api(path, opts, true);
+        } catch (refreshErr) {
+          // Refresh failed — clear session and bounce to login
+          [TOKEN_KEY, REFRESH_KEY, USER_KEY, ROLE_KEY, FULLNAME_KEY].forEach(k => localStorage.removeItem(k));
+          state.user = null; state.role = null; state.fullName = null;
+          if (state.route !== 'login') navigate('login');
+          const err = new Error('Session expired');
+          err.status = 401; err.data = { detail: 'Sesión expirada. Inicia sesión nuevamente.' };
+          throw err;
+        }
+      }
+
+      const data = res.status === 204 ? null
+        : (res.headers.get('content-type') || '').includes('application/json')
+          ? await res.json() : await res.text();
+      if (!res.ok) {
+        const err = new Error('API error');
+        err.status = res.status; err.data = data;
+        throw err;
+      }
+      return data;
+    }
+
+    // ── Icons (Lucide-style, inline) ─────────────────────────────────────────
+    const ICONS = {
+      logout: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`,
+      home:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-5h-2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
+      people: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5 17c.7-1.8 2.2-3 4-3s3.3 1.2 4 3"/><line x1="15" y1="9" x2="19" y2="9"/><line x1="15" y1="13" x2="18" y2="13"/></svg>`,
+      cart:   `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/><path d="M2 4h2.5l2 12h12l2-8H6"/></svg>`,
+      invoice:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>`,
+      box:    `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.3 7 12 12 20.7 7"/><line x1="12" y1="12" x2="12" y2="16.5"/><polyline points="9.5 14.5 12 17 14.5 14.5"/></svg>`,
+      factory:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V11l5 3V11l5 3V8l8 5v8z"/><line x1="7" y1="17" x2="7" y2="18"/><line x1="12" y1="17" x2="12" y2="18"/><line x1="17" y1="17" x2="17" y2="18"/></svg>`,
+      register:`<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="10" width="18" height="11" rx="1.5"/><path d="M6 10V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4"/><circle cx="8"  cy="15" r="0.9"/><circle cx="12" cy="15" r="0.9"/><circle cx="16" cy="15" r="0.9"/><circle cx="8"  cy="18" r="0.9"/><circle cx="16" cy="18" r="0.9"/><line x1="11" y1="18" x2="13" y2="18"/></svg>`,
+      back:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`,
+      search: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.6" y2="16.6"/></svg>`,
+      x:      `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>`,
+      trash:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`,
+      plus:   `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+      plusCart:`<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M2 4h2.5l2 12h12l2-8H6"/><line x1="14" y1="2" x2="14" y2="8"/><line x1="11" y1="5" x2="17" y2="5"/></svg>`,
+      chevron:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+      calendar:`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="16" y1="3" x2="16" y2="7"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="3" y1="11" x2="21" y2="11"/></svg>`,
+      doc:    `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>`,
+      pencil: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>`,
+      filter: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>`,
+      arrowDown:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`,
+      arrowUp:`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>`,
+      check:  `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 12 10 18 20 6"/></svg>`,
+      user:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>`,
+      hand:   `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9-9 9z"/><path d="M9 12l3 3 3-3"/></svg>`,
+    };
+
+    // ── Avatar helpers ──────────────────────────────────────────────────────
+    const AVATAR_COLORS = [
+      ['#EDE9FE', '#5B21B6'], // violet
+      ['#DCFCE7', '#166534'], // green
+      ['#FEE2E2', '#991B1B'], // red
+      ['#DBEAFE', '#1E40AF'], // blue
+      ['#FEF3C7', '#92400E'], // amber
+      ['#FCE7F3', '#9D174D'], // pink
+      ['#CFFAFE', '#155E75'], // cyan
+    ];
+    function avatarFor(name, seed) {
+      const initial = (String(name || '?').trim().charAt(0) || '?').toUpperCase();
+      const idx = Math.abs(Number(seed) || initial.charCodeAt(0)) % AVATAR_COLORS.length;
+      const [bg, fg] = AVATAR_COLORS[idx];
+      return `<span aria-hidden="true" style="display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:${bg};color:${fg};font-weight:600;font-size:18px;flex-shrink:0">${esc(initial)}</span>`;
+    }
+
+    // ── PDF download (JWT-aware, via Blob) ──────────────────────────────────
+    async function downloadAsBlob(url, filename) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) {
+        const err = new Error('Download failed');
+        err.status = res.status;
+        try { err.data = await res.json(); } catch (_) {}
+        throw err;
+      }
+      const blob = await res.blob();
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objUrl; a.download = filename || 'descarga.pdf';
+      document.body.appendChild(a); a.click();
+      setTimeout(() => { URL.revokeObjectURL(objUrl); a.remove(); }, 100);
+    }
+
+    function fmtDateTimeCO(iso) {
+      if (!iso) return '—';
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString('es-CO', {
+          year: 'numeric', month: '2-digit', day: '2-digit',
+          hour: '2-digit', minute: '2-digit', hour12: false,
+        });
+      } catch (e) { return iso; }
+    }
+
+    function todayISO() {
+      const d = new Date();
+      const p = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    }
+
+    function mondayOfThisWeekISO() {
+      const d = new Date();
+      const day = d.getDay();              // 0=Sun … 6=Sat
+      const diff = day === 0 ? -6 : 1 - day; // shift back to Monday
+      d.setDate(d.getDate() + diff);
+      const p = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    }
+
+    // ── Bottom-sheet helper ─────────────────────────────────────────────────
+    // openSheet({ title, options: [{value, label}], onSelect: (opt) => void })
+    function openSheet({ title, options, onSelect }) {
+      closeSheet();
+      const back = document.createElement('div');
+      back.className = 'sheet-backdrop';
+      back.setAttribute('role', 'dialog');
+      back.setAttribute('aria-modal', 'true');
+      back.setAttribute('aria-label', title || 'Selecciona una opción');
+      back.innerHTML = `
+        <div class="sheet">
+          <header>
+            <h3>${esc(title || '')}</h3>
+            <button type="button" class="icon-btn" data-sheet-close aria-label="Cerrar">${ICONS.x}</button>
+          </header>
+          <div>
+            ${options.map((o, i) => `
+              <button type="button" class="option" data-sheet-pick data-idx="${i}">${esc(o.label)}</button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      back._opts = options;
+      back._onSelect = onSelect;
+      document.body.appendChild(back);
+      back.addEventListener('click', (e) => {
+        if (e.target === back || e.target.closest('[data-sheet-close]')) {
+          closeSheet();
+          return;
+        }
+        const pick = e.target.closest('[data-sheet-pick]');
+        if (pick) {
+          const idx = parseInt(pick.dataset.idx, 10);
+          const opt = back._opts[idx];
+          closeSheet();
+          if (typeof back._onSelect === 'function') back._onSelect(opt);
+        }
+      });
+      // ESC to close
+      document.addEventListener('keydown', sheetEscHandler);
+    }
+    function closeSheet() {
+      document.querySelectorAll('.sheet-backdrop').forEach(s => s.remove());
+      document.removeEventListener('keydown', sheetEscHandler);
+    }
+    function sheetEscHandler(e) {
+      if (e.key === 'Escape') closeSheet();
+    }
+
+    // Document type choices (real backend choices, not the wireframe's wishful Pasaporte)
+    const DOC_TYPES = [
+      { value: 'CC',  label: 'Cédula de Ciudadanía' },
+      { value: 'CE',  label: 'Cédula de Extranjería' },
+      { value: 'NIT', label: 'NIT' },
+    ];
+    const docTypeLabel = (v) => (DOC_TYPES.find(t => t.value === v) || {}).label || '';
+
+    // ── Formatters ───────────────────────────────────────────────────────────
+    const fmtCOP = (n) => {
+      const v = Number(n || 0);
+      try {
+        return v.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
+      } catch (e) {
+        return '$ ' + v.toFixed(0);
+      }
+    };
+
+    function debounce(fn, ms) {
+      let t;
+      return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+    }
+
+    // ── Views ────────────────────────────────────────────────────────────────
+    function viewLogin() {
+      return `
+        <section class="login-screen" aria-labelledby="login-heading">
+          <div class="login-wrap">
+            <div class="login-header">
+              <div class="login-brand-mark" aria-hidden="true">F</div>
+              <h1 id="login-heading">Ferretería</h1>
+              <p>Punto de venta y gestión de inventario</p>
+            </div>
+
+            <form id="login-form" novalidate class="login-card">
+              <h2>Iniciar sesión</h2>
+
+              <p id="login-error" class="field-error" role="alert" hidden></p>
+
+              <div>
+                <label class="field-label" for="login-user">Usuario</label>
+                <input
+                  id="login-user"
+                  name="username"
+                  class="field-input"
+                  type="text"
+                  autocomplete="username"
+                  autocapitalize="none"
+                  autocorrect="off"
+                  spellcheck="false"
+                  maxlength="150"
+                  required
+                  placeholder="nombre de usuario">
+              </div>
+
+              <div>
+                <label class="field-label" for="login-password">Contraseña</label>
+                <input
+                  id="login-password"
+                  name="password"
+                  class="field-input"
+                  type="password"
+                  autocomplete="current-password"
+                  minlength="6"
+                  required
+                  placeholder="••••••••">
+              </div>
+
+              <button type="submit" id="login-btn" class="btn-primary" style="width:100%">
+                Iniciar sesión
+              </button>
+            </form>
+          </div>
+        </section>
+      `;
+    }
+
+    function viewMenu() {
+      const tiles = [
+        { to: 'personas',        label: 'Personas',       icon: 'people'  },
+        { to: 'ventas',          label: 'Ventas',         icon: 'cart'    },
+        { to: 'emitir-factura',  label: 'Emitir Factura', icon: 'invoice' },
+        { to: 'inventario',      label: 'Inventario',     icon: 'box'     },
+        { to: 'proveedores',     label: 'Proveedores',    icon: 'factory' },
+        { to: 'caja',            label: 'Caja',           icon: 'register'},
+      ];
+      const fullName = state.fullName || state.user || '';
+      const role = state.role === 'ADMIN' ? 'Administrador' : (state.role === 'EMPLEADO' ? 'Empleado' : '');
+      return `
+        <header class="app-header" role="banner">
+          <h1><span class="brand-mark" aria-hidden="true">F</span>Ferretería</h1>
+          <button type="button" class="icon-btn" data-action="logout" aria-label="Cerrar sesión" title="Cerrar sesión">
+            ${ICONS.logout}
+          </button>
+        </header>
+
+        <section class="px-4 pt-4 pb-2">
+          ${fullName ? `
+            <p class="text-sm" style="color: var(--fg-muted)">Hola, <span style="color: var(--fg); font-weight: 600">${esc(fullName)}</span>${role ? ' · ' + esc(role) : ''}</p>
+          ` : ''}
+        </section>
+
+        <nav class="px-4 py-4 flex flex-col gap-3" aria-label="Secciones principales">
+          ${tiles.map(t => `
+            <button type="button" class="card-tile" data-action="go" data-to="${esc(t.to)}">
+              <span class="tile-icon" aria-hidden="true">${ICONS[t.icon]}</span>
+              <span>${esc(t.label)}</span>
+            </button>
+          `).join('')}
+        </nav>
+      `;
+    }
+
+    // ── Ventas: pantalla inicial (buscar cliente / venta al público) ─────────
+    function viewVentasIndex() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">
+            ${ICONS.home}
+          </button>
+          <h1>Ventas</h1>
+        </header>
+        <section class="px-4 py-5 flex flex-col gap-4">
+          <button type="button" class="card-tile" data-action="sale-anonymous">
+            <span aria-hidden="true">${ICONS.people}</span>
+            <span>Venta al Público</span>
+          </button>
+
+          <div class="search-pill">
+            <span aria-hidden="true" class="text-gray-700">${ICONS.search}</span>
+            <input id="cust-search" type="search" inputmode="search" placeholder="Buscar Clientes" aria-label="Buscar clientes">
+            <button type="button" class="clear" data-action="clear-search" data-target="cust-search" aria-label="Limpiar">${ICONS.x}</button>
+          </div>
+
+          <ul id="cust-results" class="result-list" role="listbox" aria-label="Resultados de clientes">
+            <li class="empty">Escribe para buscar.</li>
+          </ul>
+        </section>
+      `;
+    }
+
+    function afterVentasIndex() {
+      const input = $('#cust-search');
+      const list  = $('#cust-results');
+
+      const run = debounce(async (q) => {
+        if (!q || q.length < 1) {
+          list.innerHTML = '<li class="empty">Escribe para buscar.</li>';
+          return;
+        }
+        list.innerHTML = '<li class="empty">Buscando…</li>';
+        try {
+          const data = await api('/api/customers/?search=' + encodeURIComponent(q) + '&page_size=15');
+          const rows = data.results || data;
+          if (!rows.length) {
+            list.innerHTML = '<li class="empty">Sin resultados.</li>';
+            return;
+          }
+          rows.forEach(c => { _rows.customers[c.id] = c; });
+          list.innerHTML = rows.map(c => `
+            <li><button type="button" data-action="select-customer" data-id="${c.id}">${esc(c.full_name)}</button></li>
+          `).join('');
+        } catch (err) {
+          list.innerHTML = '<li class="empty">Error al buscar.</li>';
+        }
+      }, 280);
+
+      input.addEventListener('input', () => run(input.value.trim()));
+      setTimeout(() => input.focus(), 50);
+    }
+
+    // ── Ventas: carrito ──────────────────────────────────────────────────────
+    function viewCarrito() {
+      const c = state.cart;
+      const customerName = c.is_anonymous
+        ? 'Venta al Público'
+        : (c.customer ? c.customer.full_name : '—');
+      const total = c.items.reduce((s, it) => s + Number(it.unit_price) * it.quantity, 0);
+      const canConfirm = c.items.length > 0;
+
+      const itemsHtml = c.items.length === 0
+        ? `<p class="text-center text-gray-500 py-8 text-sm">Aún no has agregado productos.</p>`
+        : c.items.map((it, idx) => `
+            <div class="cart-row">
+              <div>
+                <div class="pname">${esc(it.name)}</div>
+                <div class="qty">${it.quantity} <span class="text-gray-400">·</span> Unit ${fmtCOP(it.unit_price)}</div>
+              </div>
+              <div class="price">${fmtCOP(Number(it.unit_price) * it.quantity)}</div>
+              <button type="button" class="trash" data-action="remove-item" data-idx="${idx}" aria-label="Quitar ${esc(it.name)}">
+                ${ICONS.trash}
+              </button>
+            </div>
+          `).join('');
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="ventas" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Carrito</h1>
+        </header>
+
+        <section class="px-4 pt-2 pb-6">
+          <div class="customer-strip">
+            <span aria-hidden="true" class="text-gray-500">${ICONS.people}</span>
+            <div>
+              <div class="label">Cliente:</div>
+              <div class="name">${esc(customerName)}</div>
+            </div>
+          </div>
+
+          <div class="mt-2">${itemsHtml}</div>
+
+          <button type="button" class="add-tile" data-action="go" data-to="ventas/buscar-producto" aria-label="Agregar producto">
+            <span aria-hidden="true">${ICONS.plus}</span>
+          </button>
+
+          <div class="total-row">
+            <span class="label">Total:</span>
+            <span class="value">${fmtCOP(total)}</span>
+          </div>
+
+          <div class="confirm-bar ${canConfirm ? 'ready' : ''}" role="group" aria-label="Confirmar venta">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="button" data-action="go-confirm" ${canConfirm ? '' : 'disabled'}>
+              ${canConfirm ? 'Continuar' : 'Confirmar'}
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    // ── Ventas: buscar producto ─────────────────────────────────────────────
+    function viewBuscarProducto() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="ventas/carrito" aria-label="Volver al carrito">
+            ${ICONS.back}
+          </button>
+          <h1>Buscar Producto</h1>
+        </header>
+
+        <section class="px-4 py-4">
+          <div class="search-pill">
+            <span aria-hidden="true" class="text-gray-700">${ICONS.search}</span>
+            <input id="prod-search" type="search" inputmode="search" placeholder="Buscar Producto" aria-label="Buscar producto">
+            <button type="button" class="clear" data-action="clear-search" data-target="prod-search" aria-label="Limpiar">${ICONS.x}</button>
+          </div>
+
+          <div id="prod-results" class="mt-3" aria-live="polite">
+            <p class="text-center text-gray-500 py-6 text-sm">Escribe para buscar.</p>
+          </div>
+        </section>
+      `;
+    }
+
+    function afterBuscarProducto() {
+      const input = $('#prod-search');
+      const box   = $('#prod-results');
+
+      const run = debounce(async (q) => {
+        if (!q || q.length < 1) {
+          box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Escribe para buscar.</p>';
+          return;
+        }
+        box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Buscando…</p>';
+        try {
+          const data = await api('/api/products/?search=' + encodeURIComponent(q) + '&page_size=20');
+          const rows = data.results || data;
+          if (!rows.length) {
+            box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Sin resultados.</p>';
+            return;
+          }
+          rows.forEach(p => { _rows.products[p.id] = p; });
+          box.innerHTML = rows.map(p => `
+            <div class="product-row">
+              <div>
+                <div class="pname">${esc(p.name)}</div>
+                <div class="pdesc">${esc(p.description || ('Código: ' + (p.code || '—')))}</div>
+                <div class="pprice">${fmtCOP(p.sale_price)}</div>
+                <div class="text-xs text-gray-400 mt-1">Stock: ${Number(p.stock)}</div>
+              </div>
+              <button type="button" class="add-cart" data-action="pick-product" data-id="${p.id}" aria-label="Agregar ${esc(p.name)}">
+                ${ICONS.plusCart}
+              </button>
+            </div>
+          `).join('');
+        } catch (err) {
+          box.innerHTML = '<p class="text-center text-red-600 py-6 text-sm">Error al buscar.</p>';
+        }
+      }, 280);
+
+      input.addEventListener('input', () => run(input.value.trim()));
+      setTimeout(() => input.focus(), 50);
+    }
+
+    // ── Ventas: cantidad ────────────────────────────────────────────────────
+    function viewCantidad() {
+      const p = state.cart.pending_product;
+      if (!p) {
+        return viewBuscarProducto();
+      }
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="ventas/buscar-producto" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Cantidad</h1>
+        </header>
+
+        <section class="px-6 py-6 flex flex-col gap-5">
+          <div>
+            <div class="text-sm text-gray-500">Producto</div>
+            <div class="text-lg font-semibold">${esc(p.name)}</div>
+            <div class="text-sm text-gray-500">Precio unitario: ${fmtCOP(p.sale_price)} · Stock: ${Number(p.stock)}</div>
+          </div>
+
+          <div>
+            <label class="field-label" for="qty-input">Cantidad del producto</label>
+            <input id="qty-input" type="number" inputmode="numeric" min="1" step="1"
+                   value="1" max="${Number(p.stock)}" class="field-input" required>
+            <p id="qty-error" class="field-error" hidden></p>
+          </div>
+
+          <div class="text-center">
+            <div class="text-base text-gray-700">Precio:</div>
+            <div id="qty-total" class="text-3xl font-bold mt-1" style="color: var(--money)">${fmtCOP(p.sale_price)}</div>
+          </div>
+
+          <div class="flex justify-center mt-4">
+            <button type="button" class="btn-primary w-full max-w-xs" data-action="accept-qty">Aceptar</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function afterCantidad() {
+      const p = state.cart.pending_product;
+      if (!p) return;
+      const input = $('#qty-input');
+      const total = $('#qty-total');
+      const err   = $('#qty-error');
+
+      const recalc = () => {
+        const q = parseInt(input.value, 10);
+        if (!q || q < 1) { total.textContent = fmtCOP(0); return; }
+        total.textContent = fmtCOP(Number(p.sale_price) * q);
+      };
+      input.addEventListener('input', () => {
+        err.hidden = true;
+        recalc();
+      });
+      setTimeout(() => input.select(), 50);
+    }
+
+    // ── Ventas: confirmar (tipo de pago + total + confirmar) ────────────────
+    function viewConfirmarVenta() {
+      const c = state.cart;
+      const total = c.items.reduce((s, it) => s + Number(it.unit_price) * it.quantity, 0);
+      const pmsLoaded = Array.isArray(state.paymentMethods);
+      const pmOptions = pmsLoaded
+        ? state.paymentMethods.map(pm =>
+            `<option value="${pm.id}" ${c.payment_method && c.payment_method.id === pm.id ? 'selected' : ''}>${esc(pm.name)}</option>`
+          ).join('')
+        : '<option value="">Cargando…</option>';
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="ventas/carrito" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Confirmar Venta</h1>
+        </header>
+
+        <section class="px-6 py-6 flex flex-col gap-6">
+          <div>
+            <label class="field-label" for="pm-select">Tipo de Pago:</label>
+            <select id="pm-select" class="select-field" ${pmsLoaded ? '' : 'disabled'}>
+              <option value="">Tipo de Pago</option>
+              ${pmOptions}
+            </select>
+            <p id="pm-error" class="field-error" hidden></p>
+          </div>
+
+          <div class="total-row">
+            <span class="label">Total:</span>
+            <span class="value">${fmtCOP(total)}</span>
+          </div>
+
+          <div id="confirm-bar" class="confirm-bar ready">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="button" data-action="submit-sale">Confirmar</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function afterConfirmarVenta() {
+      const sel = $('#pm-select');
+      if (sel) {
+        sel.addEventListener('change', () => {
+          const id = parseInt(sel.value, 10);
+          const pm = (state.paymentMethods || []).find(p => p.id === id);
+          state.cart.payment_method = pm || null;
+          $('#pm-error').hidden = true;
+        });
+      }
+
+      // Lazy-load payment methods once
+      if (!Array.isArray(state.paymentMethods)) {
+        (async () => {
+          try {
+            const data = await api('/api/payment-methods/?page_size=100');
+            state.paymentMethods = data.results || data;
+            if (state.route === 'ventas/confirmar') render();
+          } catch (err) {
+            toast('No se pudieron cargar los métodos de pago.', 'error');
+          }
+        })();
+      }
+    }
+
+    // ── Cart actions ────────────────────────────────────────────────────────
+    function cartSelectCustomer(id) {
+      const c = _rows.customers[id];
+      if (!c) return;
+      state.cart.customer = { id: c.id, full_name: c.full_name };
+      state.cart.is_anonymous = false;
+      navigate('ventas/carrito');
+    }
+
+    function cartGoAnonymous() {
+      state.cart.customer = null;
+      state.cart.is_anonymous = true;
+      navigate('ventas/carrito');
+    }
+
+    function cartPickProduct(id) {
+      const p = _rows.products[id];
+      if (!p) return;
+      if (Number(p.stock) <= 0) { toast('Sin stock disponible.', 'error'); return; }
+      state.cart.pending_product = p;
+      navigate('ventas/cantidad');
+    }
+
+    function cartAcceptQty() {
+      const p = state.cart.pending_product;
+      if (!p) return;
+      const input = $('#qty-input');
+      const err   = $('#qty-error');
+      const q = parseInt(input.value, 10);
+      if (!q || q < 1) {
+        err.textContent = 'La cantidad debe ser mayor a 0.';
+        err.hidden = false; input.focus(); return;
+      }
+      if (q > Number(p.stock)) {
+        err.textContent = `Stock insuficiente. Disponible: ${p.stock}.`;
+        err.hidden = false; input.focus(); return;
+      }
+      // Merge if same product already in cart
+      const existing = state.cart.items.find(it => it.product_id === p.id);
+      if (existing) {
+        const newQty = existing.quantity + q;
+        if (newQty > Number(p.stock)) {
+          err.textContent = `Stock insuficiente. Ya tienes ${existing.quantity}, disponible total: ${p.stock}.`;
+          err.hidden = false; return;
+        }
+        existing.quantity = newQty;
+      } else {
+        state.cart.items.push({
+          product_id: p.id,
+          name: p.name,
+          unit_price: p.sale_price,
+          quantity: q,
+        });
+      }
+      state.cart.pending_product = null;
+      navigate('ventas/carrito');
+    }
+
+    function cartRemoveItem(idx) {
+      state.cart.items.splice(idx, 1);
+      render();
+    }
+
+    function cartGoConfirm() {
+      if (state.cart.items.length === 0) {
+        toast('Agrega al menos un producto.', 'error'); return;
+      }
+      if (!state.cart.customer && !state.cart.is_anonymous) {
+        toast('Selecciona un cliente o "Venta al Público".', 'error'); return;
+      }
+      navigate('ventas/confirmar');
+    }
+
+    async function cartSubmitSale() {
+      const c = state.cart;
+      const bar = $('#confirm-bar');
+      const errBox = $('#pm-error');
+
+      if (!c.payment_method) {
+        errBox.textContent = 'Selecciona un tipo de pago.';
+        errBox.hidden = false;
+        return;
+      }
+      if (bar) bar.classList.add('busy');
+      const payload = {
+        customer: c.customer ? c.customer.id : null,
+        payment_method: c.payment_method.id,
+        is_anonymous: !!c.is_anonymous,
+        items: c.items.map(it => ({ product: it.product_id, quantity: it.quantity })),
+      };
+      try {
+        const sale = await api('/api/sales/', { method: 'POST', body: payload });
+        // Reset cart
+        state.cart = { customer: null, is_anonymous: false, items: [], payment_method: null, pending_product: null };
+        toast('Venta #' + sale.id + ' registrada por ' + fmtCOP(sale.total));
+        navigate('menu');
+      } catch (err) {
+        if (bar) bar.classList.remove('busy');
+        let msg = 'No se pudo registrar la venta.';
+        if (err.data) {
+          if (typeof err.data === 'string') msg = err.data;
+          else if (err.data.detail) msg = err.data.detail;
+          else if (Array.isArray(err.data.items) && err.data.items.length) {
+            msg = String(err.data.items[0]);
+          } else {
+            const firstKey = Object.keys(err.data)[0];
+            if (firstKey) msg = `${firstKey}: ${JSON.stringify(err.data[firstKey])}`;
+          }
+        }
+        toast(msg, 'error');
+      }
+    }
+
+    // ── Emitir Factura: pantalla 1 — filtro fecha/hora ──────────────────────
+    function viewFacturaFiltro() {
+      const f = state.invoiceFlow;
+      const date = f.date || todayISO();
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">
+            ${ICONS.home}
+          </button>
+          <h1>Emitir Factura</h1>
+        </header>
+        <section class="px-6 py-6 flex flex-col gap-5">
+          <h2 class="text-xl font-semibold text-center">Seleccionar Venta</h2>
+
+          <div>
+            <label class="field-label" for="fac-date">Fecha de Venta</label>
+            <input id="fac-date" type="date" class="field-input" value="${esc(date)}" max="${esc(todayISO())}" required>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="field-label" for="fac-time-from">Entre las:</label>
+              <input id="fac-time-from" type="time" class="field-input" value="${esc(f.timeFrom)}">
+            </div>
+            <div>
+              <label class="field-label" for="fac-time-to">Y las:</label>
+              <input id="fac-time-to" type="time" class="field-input" value="${esc(f.timeTo)}">
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 -mt-2">Las horas son opcionales — si las dejas vacías, se muestran todas las ventas del día.</p>
+
+          <p id="fac-error" class="field-error" hidden></p>
+
+          <div class="flex justify-center mt-4">
+            <button type="button" class="btn-primary w-full max-w-xs" data-action="search-sales">Buscar</button>
+          </div>
+        </section>
+      `;
+    }
+
+    async function afterFacturaFiltro() {
+      // No bindings beyond delegation. Default date if empty.
+      const dateInput = $('#fac-date');
+      if (dateInput && !dateInput.value) dateInput.value = todayISO();
+    }
+
+    async function searchSalesForInvoice() {
+      const date    = $('#fac-date').value;
+      const tFrom   = $('#fac-time-from').value;
+      const tTo     = $('#fac-time-to').value;
+      const errBox  = $('#fac-error');
+      errBox.hidden = true;
+
+      if (!date) {
+        errBox.textContent = 'Selecciona una fecha.'; errBox.hidden = false; return;
+      }
+      if (tFrom && tTo && tFrom > tTo) {
+        errBox.textContent = 'La hora "Entre las" debe ser menor o igual a "Y las".';
+        errBox.hidden = false; return;
+      }
+
+      state.invoiceFlow.date = date;
+      state.invoiceFlow.timeFrom = tFrom;
+      state.invoiceFlow.timeTo = tTo;
+      state.invoiceFlow.results = null;
+      navigate('emitir-factura/resultados');
+    }
+
+    // ── Emitir Factura: pantalla 2 — resultados ─────────────────────────────
+    function viewFacturaResultados() {
+      const f = state.invoiceFlow;
+      if (!f.date) { navigate('emitir-factura'); return ''; }
+
+      const loading = f.results === null;
+      let body;
+      if (loading) {
+        body = `<li class="empty">Buscando…</li>`;
+      } else if (f.results.length === 0) {
+        body = `<li class="empty">Sin ventas en el rango seleccionado.</li>`;
+      } else {
+        body = f.results.map(s => {
+          const d = new Date(s.sale_date);
+          const hhmm = d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+          const name = s.customer_name || (s.is_anonymous ? 'Venta al Público' : '—');
+          const badge = s.invoice_id
+            ? `<span class="text-xs px-2 py-0.5 rounded-full" style="background:#DCFCE7;color:#166534">Ya facturada</span>`
+            : '';
+          return `
+            <li>
+              <button type="button" class="grid grid-cols-[auto_1fr_auto] items-center gap-3 w-full px-4 py-3 text-left rounded-lg"
+                      data-action="pick-sale" data-id="${s.id}">
+                ${avatarFor(name, s.id)}
+                <div>
+                  <div class="text-base">${esc(name)} ${badge}</div>
+                  <div class="text-lg font-semibold" style="color: var(--money)">${fmtCOP(s.total)}</div>
+                </div>
+                <div class="text-xs text-gray-500">${esc(hhmm)}</div>
+              </button>
+            </li>
+          `;
+        }).join('');
+      }
+
+      const rangeLabel = (f.timeFrom || f.timeTo)
+        ? `${esc(f.date)} · ${esc(f.timeFrom || '00:00')} – ${esc(f.timeTo || '23:59')}`
+        : esc(f.date);
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="emitir-factura" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Resultados</h1>
+        </header>
+        <section class="px-4 py-4">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm text-gray-600">${rangeLabel}</p>
+            <button type="button" class="icon-btn" data-action="go" data-to="emitir-factura" aria-label="Cerrar">${ICONS.x}</button>
+          </div>
+          <ul class="result-list" role="listbox" aria-label="Ventas encontradas">${body}</ul>
+        </section>
+      `;
+    }
+
+    async function afterFacturaResultados() {
+      const f = state.invoiceFlow;
+      if (f.results !== null) return;
+      try {
+        const data = await api(
+          '/api/sales/?date_from=' + encodeURIComponent(f.date) +
+          '&date_to=' + encodeURIComponent(f.date) +
+          '&ordering=sale_date&page_size=100'
+        );
+        let rows = data.results || data;
+        // Client-side hour filter (backend only filters by date).
+        if (f.timeFrom || f.timeTo) {
+          const inRange = (iso) => {
+            const d = new Date(iso);
+            const hhmm = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+            if (f.timeFrom && hhmm < f.timeFrom) return false;
+            if (f.timeTo   && hhmm > f.timeTo)   return false;
+            return true;
+          };
+          rows = rows.filter(s => inRange(s.sale_date));
+        }
+        // Don't offer cancelled sales.
+        rows = rows.filter(s => s.status !== 'CANCELLED');
+        state.invoiceFlow.results = rows;
+      } catch (err) {
+        state.invoiceFlow.results = [];
+        toast('Error al buscar ventas.', 'error');
+      }
+      if (state.route === 'emitir-factura/resultados') render();
+    }
+
+    function pickSaleForInvoice(saleId) {
+      const f = state.invoiceFlow;
+      const sale = (f.results || []).find(s => s.id === saleId);
+      if (!sale) return;
+      f.selectedSale = sale;
+      navigate('emitir-factura/preview');
+    }
+
+    // ── Emitir Factura: pantalla 3 — vista previa + descargar PDF ───────────
+    function viewFacturaPreview() {
+      const sale = state.invoiceFlow.selectedSale;
+      if (!sale) { navigate('emitir-factura'); return ''; }
+
+      const name = sale.customer_name || (sale.is_anonymous ? 'Venta al Público' : '—');
+      const items = (sale.items || []).map(it => `
+        <div class="flex justify-between text-sm py-1">
+          <span>${esc(it.product_name || ('Producto #' + it.product))} × ${it.quantity}</span>
+          <span style="color: var(--money)">${fmtCOP(it.subtotal)}</span>
+        </div>
+      `).join('');
+
+      const alreadyInvoiced = !!sale.invoice_id;
+      const btnLabel = alreadyInvoiced ? 'Descargar PDF' : 'Emitir y Descargar PDF';
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="emitir-factura/resultados" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Vista Previa</h1>
+        </header>
+        <section class="px-4 py-5 flex flex-col gap-5">
+          <div style="background: var(--lavender); border-radius: 14px; padding: 20px;">
+            <h2 class="text-xl font-semibold text-center">${esc(name)}</h2>
+            <p class="text-sm mt-3"><strong>Fecha:</strong></p>
+            <p class="text-sm">${esc(fmtDateTimeCO(sale.sale_date))}</p>
+            ${sale.payment_method_name ? `<p class="text-sm mt-2"><strong>Pago:</strong> ${esc(sale.payment_method_name)}</p>` : ''}
+            ${sale.invoice_id ? `<p class="text-xs mt-2 text-green-800">Factura #${sale.invoice_id} ya existe.</p>` : ''}
+          </div>
+
+          ${items ? `<div class="px-2"><h3 class="text-sm font-semibold text-gray-600 mb-1">Detalle</h3>${items}</div>` : ''}
+
+          <div class="total-row">
+            <span class="label">Total Venta:</span>
+            <span class="value">${fmtCOP(sale.total)}</span>
+          </div>
+
+          <button id="dl-pdf" type="button" class="card-tile" data-action="emit-and-download">
+            <span aria-hidden="true">${ICONS.doc}</span>
+            <span>${esc(btnLabel)}</span>
+          </button>
+          <p id="fac-preview-error" class="field-error" hidden></p>
+        </section>
+      `;
+    }
+
+    async function emitAndDownloadInvoice() {
+      const sale = state.invoiceFlow.selectedSale;
+      if (!sale) return;
+      const btn = $('#dl-pdf');
+      const errBox = $('#fac-preview-error');
+      errBox.hidden = true;
+      const original = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span aria-hidden="true">${ICONS.doc}</span><span>Procesando…</span>`;
+
+      try {
+        let invoiceId = sale.invoice_id;
+        if (!invoiceId) {
+          const inv = await api('/api/customer-invoices/', {
+            method: 'POST',
+            body: { sale: sale.id },
+          });
+          invoiceId = inv.id;
+          sale.invoice_id = invoiceId;
+          toast('Factura #' + invoiceId + ' emitida.');
+        }
+        await downloadAsBlob(
+          '/api/customer-invoices/' + invoiceId + '/pdf/',
+          'factura-' + invoiceId + '.pdf'
+        );
+        // Refresh button label since invoice now exists.
+        render();
+      } catch (err) {
+        let msg = 'No se pudo generar la factura.';
+        if (err.data) {
+          if (err.data.detail) msg = err.data.detail;
+          else if (err.data.sale) msg = Array.isArray(err.data.sale) ? err.data.sale[0] : String(err.data.sale);
+          else if (err.data.discount) msg = 'Descuento inválido: ' + err.data.discount;
+          else {
+            const k = Object.keys(err.data)[0];
+            if (k) msg = `${k}: ${JSON.stringify(err.data[k])}`;
+          }
+        }
+        errBox.textContent = msg;
+        errBox.hidden = false;
+        toast(msg, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
+      }
+    }
+
+    // ── Personas: índice ────────────────────────────────────────────────────
+    function viewPersonasIndex() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">
+            ${ICONS.home}
+          </button>
+          <h1>Personas</h1>
+        </header>
+        <nav class="px-4 py-5 flex flex-col gap-4" aria-label="Opciones de personas">
+          <button type="button" class="card-tile" data-action="go" data-to="personas/nuevo-cliente">
+            <span class="tile-icon" aria-hidden="true">${ICONS.people}</span>
+            <span>Nuevo Cliente</span>
+          </button>
+          <button type="button" class="card-tile" data-action="go" data-to="personas/nuevo-empleado">
+            <span class="tile-icon" aria-hidden="true">${ICONS.people}</span>
+            <span>Nuevo Empleado</span>
+          </button>
+        </nav>
+      `;
+    }
+
+    // ── Personas: nuevo cliente ─────────────────────────────────────────────
+    function viewNuevoCliente() {
+      const c = state.cliente;
+      const docLabel = docTypeLabel(c.document_type);
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="personas" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Nuevo Cliente</h1>
+        </header>
+
+        <form id="cliente-form" novalidate class="px-6 py-5 flex flex-col gap-5">
+          <div>
+            <label class="field-label" for="c-name">Nombre Completo</label>
+            <input id="c-name" name="full_name" class="field-input"
+                   value="${esc(c.full_name)}" maxlength="255" required
+                   placeholder="Nombre del Cliente">
+          </div>
+
+          <div>
+            <span class="field-label">Tipo de Documento</span>
+            <button type="button" id="c-doctype-btn"
+                    class="sheet-trigger ${c.document_type ? '' : 'empty'}"
+                    data-action="open-doc-type" data-target="cliente"
+                    aria-haspopup="dialog">
+              <span class="chev">${ICONS.chevron}</span>
+              <span id="c-doctype-label">${esc(docLabel || 'Tipo de Documento')}</span>
+            </button>
+          </div>
+
+          <div>
+            <label class="field-label" for="c-doc">Número de Documento</label>
+            <input id="c-doc" name="document_number" class="field-input"
+                   value="${esc(c.document_number)}" inputmode="numeric" maxlength="20" required
+                   placeholder="Documento del Cliente">
+          </div>
+
+          <div>
+            <label class="field-label" for="c-phone">Número de Teléfono</label>
+            <input id="c-phone" name="phone" class="field-input" type="tel"
+                   inputmode="tel" maxlength="20"
+                   value="${esc(c.phone)}" placeholder="Teléfono del Cliente">
+          </div>
+
+          <div>
+            <label class="field-label" for="c-email">E-mail</label>
+            <input id="c-email" name="email" class="field-input" type="email"
+                   value="${esc(c.email)}" placeholder="E-mail del Cliente">
+          </div>
+
+          <p id="c-error" class="field-error" hidden></p>
+
+          <div class="confirm-bar ready" id="c-confirm" role="group" aria-label="Confirmar nuevo cliente">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Confirmar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterNuevoCliente() {
+      const form = $('#cliente-form');
+      // sync state on every input
+      form.addEventListener('input', (e) => {
+        const f = e.target;
+        if (!f.name) return;
+        state.cliente[f.name] = f.value;
+      });
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitNuevoCliente();
+      });
+      setTimeout(() => $('#c-name').focus(), 50);
+    }
+
+    async function submitNuevoCliente() {
+      const c = state.cliente;
+      const errBox = $('#c-error');
+      const bar    = $('#c-confirm');
+      errBox.hidden = true;
+
+      if (!c.full_name.trim())        return showFormErr(errBox, 'El nombre es requerido.');
+      if (!c.document_type)           return showFormErr(errBox, 'Selecciona el tipo de documento.');
+      if (!c.document_number.trim())  return showFormErr(errBox, 'El número de documento es requerido.');
+      if (c.email && !/^\S+@\S+\.\S+$/.test(c.email)) {
+        return showFormErr(errBox, 'El email no tiene un formato válido.');
+      }
+
+      bar.classList.add('busy');
+      try {
+        const created = await api('/api/customers/', {
+          method: 'POST',
+          body: {
+            full_name: c.full_name.trim(),
+            document_type: c.document_type,
+            document_number: c.document_number.trim(),
+            phone: c.phone.trim(),
+            email: c.email.trim(),
+            address: '',
+            is_active: true,
+          },
+        });
+        // Reset and go back to menu
+        state.cliente = { full_name: '', document_type: '', document_number: '', phone: '', email: '' };
+        toast('Cliente "' + created.full_name + '" creado.');
+        navigate('personas');
+      } catch (err) {
+        bar.classList.remove('busy');
+        const msg = apiErrorMessage(err, 'No se pudo crear el cliente.');
+        showFormErr(errBox, msg);
+      }
+    }
+
+    // ── Personas: nuevo empleado ────────────────────────────────────────────
+    function viewNuevoEmpleado() {
+      const e = state.empleado;
+      const docLabel = docTypeLabel(e.document_type);
+      const dayLabels = [
+        { v: 1, label: 'L' },
+        { v: 2, label: 'M' },
+        { v: 3, label: 'M' },
+        { v: 4, label: 'J' },
+        { v: 5, label: 'V' },
+        { v: 6, label: 'S' },
+        { v: 7, label: 'D' },
+      ];
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="personas" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Nuevo Empleado</h1>
+        </header>
+
+        <form id="empleado-form" novalidate class="px-6 py-5 flex flex-col gap-5">
+          <div>
+            <label class="field-label" for="e-name">Nombre Completo</label>
+            <input id="e-name" name="full_name" class="field-input"
+                   value="${esc(e.full_name)}" maxlength="255" required
+                   placeholder="Nombre del Empleado">
+          </div>
+
+          <div>
+            <span class="field-label">Tipo de Documento</span>
+            <button type="button" id="e-doctype-btn"
+                    class="sheet-trigger ${e.document_type ? '' : 'empty'}"
+                    data-action="open-doc-type" data-target="empleado"
+                    aria-haspopup="dialog">
+              <span class="chev">${ICONS.chevron}</span>
+              <span id="e-doctype-label">${esc(docLabel || 'Tipo de Documento')}</span>
+            </button>
+          </div>
+
+          <div>
+            <label class="field-label" for="e-doc">Número de Documento</label>
+            <input id="e-doc" name="document_number" class="field-input"
+                   value="${esc(e.document_number)}" inputmode="numeric" maxlength="20" required
+                   placeholder="Documento del Empleado">
+          </div>
+
+          <div>
+            <label class="field-label" for="e-phone">Número de Teléfono</label>
+            <input id="e-phone" name="phone" class="field-input" type="tel"
+                   inputmode="tel" maxlength="20"
+                   value="${esc(e.phone)}" placeholder="Teléfono del Empleado">
+          </div>
+
+          <div>
+            <label class="field-label" for="e-position">Cargo</label>
+            <input id="e-position" name="position" class="field-input"
+                   value="${esc(e.position)}" maxlength="100" required
+                   placeholder="Ej: Vendedor, Bodeguero">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="field-label" for="e-hire">Fecha de Contratación</label>
+              <input id="e-hire" name="hire_date" class="field-input" type="date"
+                     value="${esc(e.hire_date || todayISO())}" max="${esc(todayISO())}" required>
+            </div>
+            <div>
+              <label class="field-label" for="e-salary">Salario Base</label>
+              <input id="e-salary" name="base_salary" class="field-input" type="number"
+                     min="0" step="1000" inputmode="numeric"
+                     value="${esc(e.base_salary)}" required placeholder="1300000">
+            </div>
+          </div>
+
+          <h2 class="form-section-title">Cuenta de acceso</h2>
+          <div>
+            <label class="field-label" for="e-user">Usuario</label>
+            <input id="e-user" name="username" class="field-input"
+                   value="${esc(e.username)}" maxlength="150" required
+                   autocomplete="off" placeholder="usuario.empleado">
+          </div>
+          <div>
+            <label class="field-label" for="e-pass">Contraseña</label>
+            <input id="e-pass" name="password" class="field-input" type="password"
+                   value="${esc(e.password)}" minlength="8" maxlength="30" required
+                   autocomplete="new-password" placeholder="Mín. 8 caracteres">
+          </div>
+
+          <h2 class="form-section-title">Horario Regular</h2>
+          <div class="day-pills" role="group" aria-label="Días de la semana">
+            ${dayLabels.map(d => `
+              <button type="button" class="day-pill" data-action="toggle-day" data-day="${d.v}"
+                      aria-pressed="${e.days.includes(d.v) ? 'true' : 'false'}"
+                      aria-label="Día ${d.v}">${d.label}</button>
+            `).join('')}
+          </div>
+
+          <div class="time-cluster">
+            <div>
+              <label class="field-label" for="e-start">Hora de Inicio</label>
+              <input id="e-start" name="start_time" class="field-input" type="time"
+                     value="${esc(e.start_time)}" placeholder="00:00">
+            </div>
+            <div>
+              <label class="field-label" for="e-end">Hora de Salida</label>
+              <input id="e-end" name="end_time" class="field-input" type="time"
+                     value="${esc(e.end_time)}" placeholder="00:00">
+            </div>
+          </div>
+
+          <p class="text-xs text-gray-500 -mt-2">El horario se aplica a la semana actual (lunes en curso).</p>
+          <p id="e-error" class="field-error" hidden></p>
+
+          <div class="confirm-bar ready" id="e-confirm" role="group" aria-label="Confirmar nuevo empleado">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Confirmar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterNuevoEmpleado() {
+      const form = $('#empleado-form');
+      form.addEventListener('input', (e) => {
+        const f = e.target;
+        if (!f.name) return;
+        state.empleado[f.name] = f.value;
+      });
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitNuevoEmpleado();
+      });
+      setTimeout(() => $('#e-name').focus(), 50);
+    }
+
+    function toggleEmpleadoDay(day) {
+      const set = new Set(state.empleado.days);
+      if (set.has(day)) set.delete(day); else set.add(day);
+      state.empleado.days = Array.from(set).sort((a, b) => a - b);
+      const btn = document.querySelector(`.day-pill[data-day="${day}"]`);
+      if (btn) btn.setAttribute('aria-pressed', set.has(day) ? 'true' : 'false');
+    }
+
+    async function submitNuevoEmpleado() {
+      const e = state.empleado;
+      const errBox = $('#e-error');
+      const bar    = $('#e-confirm');
+      errBox.hidden = true;
+
+      if (!e.full_name.trim())        return showFormErr(errBox, 'El nombre es requerido.');
+      if (!e.document_type)           return showFormErr(errBox, 'Selecciona el tipo de documento.');
+      if (!e.document_number.trim())  return showFormErr(errBox, 'El número de documento es requerido.');
+      if (!e.position.trim())         return showFormErr(errBox, 'El cargo es requerido.');
+      if (!e.hire_date)               return showFormErr(errBox, 'La fecha de contratación es requerida.');
+      if (!e.base_salary)             return showFormErr(errBox, 'El salario base es requerido.');
+      if (!e.username.trim())         return showFormErr(errBox, 'El usuario es requerido.');
+      if ((e.password || '').length < 8) return showFormErr(errBox, 'La contraseña debe tener al menos 8 caracteres.');
+
+      const hasDays = e.days.length > 0;
+      const hasTimes = !!(e.start_time && e.end_time);
+      if (hasDays && !hasTimes) return showFormErr(errBox, 'Indica hora de inicio y salida para el horario.');
+      if (!hasDays && hasTimes) return showFormErr(errBox, 'Selecciona al menos un día para aplicar el horario.');
+      if (hasTimes && e.end_time <= e.start_time) {
+        return showFormErr(errBox, 'La hora de salida debe ser posterior a la de inicio.');
+      }
+
+      bar.classList.add('busy');
+      let createdEmp;
+      try {
+        createdEmp = await api('/api/employees/', {
+          method: 'POST',
+          body: {
+            full_name: e.full_name.trim(),
+            document_type: e.document_type,
+            document_number: e.document_number.trim(),
+            phone: e.phone.trim(),
+            position: e.position.trim(),
+            hire_date: e.hire_date,
+            base_salary: String(e.base_salary),
+            username: e.username.trim(),
+            password: e.password,
+            is_active: true,
+          },
+        });
+      } catch (err) {
+        bar.classList.remove('busy');
+        return showFormErr(errBox, apiErrorMessage(err, 'No se pudo crear el empleado.'));
+      }
+
+      // Optional: create the WorkSchedule for the current week.
+      if (hasDays && hasTimes) {
+        try {
+          await api('/api/work-schedules/', {
+            method: 'POST',
+            body: {
+              employee: createdEmp.id,
+              week_start: mondayOfThisWeekISO(),
+              notes: 'Horario regular cargado al crear el empleado.',
+              shifts: e.days.map(d => ({
+                day_of_week: d,
+                start_time: e.start_time,
+                end_time: e.end_time,
+              })),
+            },
+          });
+          toast('Empleado y horario creados.');
+        } catch (err) {
+          // Employee already created; just warn about the schedule.
+          toast('Empleado creado; horario falló: ' + apiErrorMessage(err, ''), 'error');
+        }
+      } else {
+        toast('Empleado "' + createdEmp.full_name + '" creado.');
+      }
+
+      // Reset
+      state.empleado = {
+        full_name: '', document_type: '', document_number: '',
+        phone: '', position: '', hire_date: '', base_salary: '',
+        username: '', password: '',
+        days: [], start_time: '', end_time: '',
+      };
+      navigate('personas');
+    }
+
+    // ── Shared form helpers ─────────────────────────────────────────────────
+    function showFormErr(box, msg) {
+      box.textContent = msg;
+      box.hidden = false;
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    function apiErrorMessage(err, fallback) {
+      if (!err || !err.data) return fallback;
+      if (typeof err.data === 'string') return err.data;
+      if (err.data.detail) return err.data.detail;
+      const k = Object.keys(err.data)[0];
+      if (!k) return fallback;
+      const v = err.data[k];
+      const txt = Array.isArray(v) ? v[0] : (typeof v === 'string' ? v : JSON.stringify(v));
+      return `${k}: ${txt}`;
+    }
+
+    // Open the document-type sheet for either form.
+    function openDocTypeSheet(target) {
+      openSheet({
+        title: 'Tipo de Documento',
+        options: DOC_TYPES,
+        onSelect: (opt) => {
+          state[target].document_type = opt.value;
+          // Patch the DOM directly so we don't lose in-progress input values
+          const prefix = target === 'cliente' ? 'c' : 'e';
+          const label = $(`#${prefix}-doctype-label`);
+          const btn   = $(`#${prefix}-doctype-btn`);
+          if (label) label.textContent = opt.label;
+          if (btn)   btn.classList.remove('empty');
+        },
+      });
+    }
+
+    // ── Inventario: índice ──────────────────────────────────────────────────
+    function viewInventarioIndex() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">
+            ${ICONS.home}
+          </button>
+          <h1>Inventario</h1>
+        </header>
+        <nav class="px-4 py-5 flex flex-col gap-4" aria-label="Opciones de inventario">
+          <button type="button" class="card-tile" data-action="go" data-to="inventario/stock">
+            <span class="tile-icon" aria-hidden="true">${ICONS.box}</span>
+            <span>Stock</span>
+          </button>
+          <button type="button" class="card-tile" data-action="go" data-to="inventario/pedidos">
+            <span class="tile-icon" aria-hidden="true">${ICONS.factory}</span>
+            <span>Pedidos</span>
+          </button>
+        </nav>
+      `;
+    }
+
+    // ── Inventario: stock list ──────────────────────────────────────────────
+    function activeFilterCount() {
+      const f = state.stock.filters;
+      let n = 0;
+      if (f.category)      n++;
+      if (f.min_price)     n++;
+      if (f.max_price)     n++;
+      if (f.is_active)     n++;
+      return n;
+    }
+
+    function viewStockList() {
+      const isAdmin = (state.role === 'ADMIN');
+      const fcount  = activeFilterCount();
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Stock</h1>
+        </header>
+
+        <section class="px-4 py-4">
+          <div class="search-pill">
+            <span aria-hidden="true" class="text-gray-700">${ICONS.search}</span>
+            <input id="stock-search" type="search" inputmode="search" placeholder="Buscar producto"
+                   value="${esc(state.stock.search)}" aria-label="Buscar producto">
+            <button type="button" class="clear" data-action="clear-search" data-target="stock-search" aria-label="Limpiar">${ICONS.x}</button>
+          </div>
+
+          <div class="mt-3 flex items-center justify-between">
+            <button type="button" class="filter-pill" data-action="go" data-to="inventario/stock/filtros">
+              <span aria-hidden="true">${ICONS.filter}</span>
+              <span>Filtros</span>
+              ${fcount ? `<span class="count">${fcount}</span>` : ''}
+            </button>
+            ${fcount ? `<button type="button" class="text-sm text-indigo-700 underline" data-action="clear-filters">Limpiar filtros</button>` : ''}
+          </div>
+
+          <div id="stock-results" class="mt-3" aria-live="polite">
+            <p class="text-center text-gray-500 py-6 text-sm">Cargando…</p>
+          </div>
+
+          ${isAdmin ? `
+            <button type="button" class="add-tile" data-action="new-product" aria-label="Nuevo producto">
+              <span aria-hidden="true">${ICONS.plus}</span>
+            </button>
+          ` : ''}
+        </section>
+      `;
+    }
+
+    async function afterStockList() {
+      const input = $('#stock-search');
+      input.addEventListener('input', debounce(() => {
+        state.stock.search = input.value;
+        loadStock();
+      }, 280));
+      // Initial load
+      await loadStock();
+    }
+
+    function buildStockQS() {
+      const p = new URLSearchParams();
+      const f = state.stock.filters;
+      if (state.stock.search.trim()) p.set('search', state.stock.search.trim());
+      if (f.category)   p.set('category', f.category.id);
+      if (f.min_price)  p.set('min_price', f.min_price);
+      if (f.max_price)  p.set('max_price', f.max_price);
+      if (f.is_active)  p.set('is_active', f.is_active);
+      p.set('page_size', '50');
+      return p.toString();
+    }
+
+    async function loadStock() {
+      const box = $('#stock-results');
+      if (!box) return;
+      box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Cargando…</p>';
+      try {
+        const data = await api('/api/products/?' + buildStockQS());
+        const rows = data.results || data;
+        state.stock.results = rows;
+        if (!rows.length) {
+          box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Sin productos.</p>';
+          return;
+        }
+        const isAdmin = (state.role === 'ADMIN');
+        rows.forEach(p => { _rows.products[p.id] = p; });
+        box.innerHTML = rows.map(p => {
+          const cls = Number(p.stock) <= 0 ? 'out' :
+                      (p.is_low_stock ? 'low' : '');
+          return `
+            <div class="stock-row">
+              <div>
+                <div class="pname">${esc(p.name)}</div>
+                <div class="pmeta">Código: ${esc(p.code || '—')}${p.category_name ? ` · ${esc(p.category_name)}` : ''}</div>
+                <div class="pprice">${fmtCOP(p.sale_price)}</div>
+              </div>
+              <div class="stock-badge ${cls}">Stock: ${Number(p.stock)}</div>
+              ${isAdmin ? `
+                <button type="button" class="edit-btn" data-action="edit-product" data-id="${p.id}" aria-label="Editar ${esc(p.name)}">
+                  ${ICONS.pencil}
+                </button>
+              ` : '<div></div>'}
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        box.innerHTML = '<p class="text-center text-red-600 py-6 text-sm">Error al cargar productos.</p>';
+      }
+    }
+
+    function clearStockFilters() {
+      state.stock.filters = { category: null, min_price: '', max_price: '', is_active: '' };
+      loadStock();
+      render();
+    }
+
+    // ── Inventario: filtros (pantalla separada) ─────────────────────────────
+    function viewStockFilters() {
+      const f = state.stock.filters;
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/stock" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Filtros</h1>
+        </header>
+
+        <form id="stock-filters-form" class="px-6 py-5 flex flex-col gap-5" novalidate>
+          <div>
+            <span class="field-label">Categoría</span>
+            <button type="button" id="f-cat-btn"
+                    class="sheet-trigger ${f.category ? '' : 'empty'}"
+                    data-action="open-cat-filter"
+                    aria-haspopup="dialog">
+              <span class="chev">${ICONS.chevron}</span>
+              <span id="f-cat-label">${esc(f.category ? f.category.name : 'Categoría')}</span>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="field-label" for="f-min">Desde</label>
+              <input id="f-min" name="min_price" class="field-input" type="number"
+                     min="0" step="100" inputmode="numeric"
+                     value="${esc(f.min_price)}" placeholder="$ 0">
+            </div>
+            <div>
+              <label class="field-label" for="f-max">Hasta</label>
+              <input id="f-max" name="max_price" class="field-input" type="number"
+                     min="0" step="100" inputmode="numeric"
+                     value="${esc(f.max_price)}" placeholder="$ 0">
+            </div>
+          </div>
+
+          <div>
+            <label class="field-label" for="f-active">Estado</label>
+            <select id="f-active" name="is_active" class="select-field">
+              <option value="">Cualquiera</option>
+              <option value="true"  ${f.is_active === 'true'  ? 'selected' : ''}>Activos</option>
+              <option value="false" ${f.is_active === 'false' ? 'selected' : ''}>Inactivos</option>
+            </select>
+          </div>
+
+          <p id="f-error" class="field-error" hidden></p>
+
+          <div class="flex justify-center gap-3 mt-4">
+            <button type="button" class="btn-primary" style="background: #6B7280" data-action="reset-filters">Limpiar</button>
+            <button type="submit" class="btn-primary flex-1">Aplicar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterStockFilters() {
+      const form = $('#stock-filters-form');
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const min = $('#f-min').value.trim();
+        const max = $('#f-max').value.trim();
+        const errBox = $('#f-error');
+        errBox.hidden = true;
+        if (min && max && Number(min) > Number(max)) {
+          showFormErr(errBox, '"Desde" debe ser menor o igual que "Hasta".');
+          return;
+        }
+        state.stock.filters.min_price = min;
+        state.stock.filters.max_price = max;
+        state.stock.filters.is_active = $('#f-active').value;
+        navigate('inventario/stock');
+      });
+    }
+
+    async function openCategoryFilterSheet() {
+      await ensureCategories();
+      const opts = [
+        { value: '__all__', label: '— Todas las categorías —' },
+        ...state.stock.categories.map(c => ({ value: String(c.id), label: c.name })),
+      ];
+      openSheet({
+        title: 'Categoría',
+        options: opts,
+        onSelect: (opt) => {
+          if (opt.value === '__all__') {
+            state.stock.filters.category = null;
+          } else {
+            const cat = state.stock.categories.find(c => String(c.id) === opt.value);
+            state.stock.filters.category = cat ? { id: cat.id, name: cat.name } : null;
+          }
+          const lbl = $('#f-cat-label'); const btn = $('#f-cat-btn');
+          if (lbl) lbl.textContent = state.stock.filters.category ? state.stock.filters.category.name : 'Categoría';
+          if (btn) btn.classList.toggle('empty', !state.stock.filters.category);
+        },
+      });
+    }
+
+    async function ensureCategories() {
+      if (Array.isArray(state.stock.categories)) return;
+      try {
+        const data = await api('/api/categories/?page_size=200');
+        state.stock.categories = data.results || data;
+      } catch (err) {
+        state.stock.categories = [];
+        toast('No se pudieron cargar las categorías.', 'error');
+      }
+    }
+
+    function resetFiltersInPlace() {
+      $('#f-min').value = '';
+      $('#f-max').value = '';
+      $('#f-active').value = '';
+      state.stock.filters = { category: null, min_price: '', max_price: '', is_active: '' };
+      const lbl = $('#f-cat-label'); const btn = $('#f-cat-btn');
+      if (lbl) lbl.textContent = 'Categoría';
+      if (btn) btn.classList.add('empty');
+    }
+
+    // ── Inventario: editar/crear producto ───────────────────────────────────
+    function loadProductForEdit(id) {
+      const p = _rows.products[id];
+      if (!p) { toast('Producto no encontrado.', 'error'); return; }
+      state.productEdit = {
+        id: p.id,
+        code: p.code || '',
+        name: p.name || '',
+        description: p.description || '',
+        category: p.category_name ? { id: p.category, name: p.category_name } : null,
+        sale_price: String(p.sale_price ?? ''),
+        cost_price: String(p.cost_price ?? ''),
+        stock: Number(p.stock ?? 0),
+        min_stock: Number(p.min_stock ?? 5),
+        is_active: p.is_active !== false,
+      };
+      navigate('inventario/stock/editar');
+    }
+
+    function startNewProduct() {
+      state.productEdit = {
+        id: null,
+        code: '', name: '', description: '',
+        category: null,
+        sale_price: '', cost_price: '',
+        stock: 0, min_stock: 5,
+        is_active: true,
+      };
+      navigate('inventario/stock/nuevo');
+    }
+
+    function viewProductForm() {
+      const p = state.productEdit;
+      const isEdit = (p.id !== null);
+      const isAdmin = (state.role === 'ADMIN');
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/stock" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>${isEdit ? 'Editar Producto' : 'Nuevo Producto'}</h1>
+        </header>
+
+        <form id="product-form" novalidate class="px-6 py-5 flex flex-col gap-5">
+          <div>
+            <label class="field-label" for="p-code">Código del Producto</label>
+            <input id="p-code" name="code" class="field-input"
+                   value="${esc(p.code)}" maxlength="50" required
+                   placeholder="Ej: MART-001" ${isEdit ? 'readonly' : ''}>
+          </div>
+
+          <div>
+            <label class="field-label" for="p-name">Nombre</label>
+            <input id="p-name" name="name" class="field-input"
+                   value="${esc(p.name)}" maxlength="255" required
+                   placeholder="Nombre del Producto">
+          </div>
+
+          <div>
+            <span class="field-label">Categoría</span>
+            <button type="button" id="p-cat-btn"
+                    class="sheet-trigger ${p.category ? '' : 'empty'}"
+                    data-action="open-cat-product"
+                    aria-haspopup="dialog">
+              <span class="chev">${ICONS.chevron}</span>
+              <span id="p-cat-label">${esc(p.category ? p.category.name : 'Categoría del Producto')}</span>
+            </button>
+          </div>
+
+          <div>
+            <label class="field-label" for="p-desc">Descripción</label>
+            <input id="p-desc" name="description" class="field-input"
+                   value="${esc(p.description)}" maxlength="500"
+                   placeholder="Descripción breve (opcional)">
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="field-label" for="p-sale">Precio de Venta</label>
+              <input id="p-sale" name="sale_price" class="field-input" type="number"
+                     min="0" step="100" inputmode="numeric" required
+                     value="${esc(p.sale_price)}" placeholder="50000">
+            </div>
+            ${isAdmin ? `
+            <div>
+              <label class="field-label" for="p-cost">Precio de Costo</label>
+              <input id="p-cost" name="cost_price" class="field-input" type="number"
+                     min="0" step="100" inputmode="numeric"
+                     value="${esc(p.cost_price)}" placeholder="30000">
+            </div>
+            ` : '<div></div>'}
+          </div>
+
+          <h2 class="form-section-title">Stock</h2>
+          <div class="qty-stepper">
+            <label for="p-stock">Stock actual</label>
+            <input id="p-stock" name="stock" class="value" type="number"
+                   min="0" inputmode="numeric" value="${Number(p.stock)}" required>
+            <div class="steps">
+              <button type="button" class="step-btn" data-action="stock-step" data-delta="1"  aria-label="+1">${ICONS.arrowUp}</button>
+              <button type="button" class="step-btn" data-action="stock-step" data-delta="-1" aria-label="-1">${ICONS.arrowDown}</button>
+            </div>
+          </div>
+          <div class="qty-stepper">
+            <label for="p-min">Stock mínimo</label>
+            <input id="p-min" name="min_stock" class="value" type="number"
+                   min="0" inputmode="numeric" value="${Number(p.min_stock)}">
+            <div class="steps">
+              <button type="button" class="step-btn" data-action="min-step" data-delta="1"  aria-label="+1">${ICONS.arrowUp}</button>
+              <button type="button" class="step-btn" data-action="min-step" data-delta="-1" aria-label="-1">${ICONS.arrowDown}</button>
+            </div>
+          </div>
+
+          <p id="p-error" class="field-error" hidden></p>
+
+          <div class="confirm-bar ready" id="p-confirm" role="group" aria-label="Confirmar producto">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Confirmar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterProductForm() {
+      const form = $('#product-form');
+      form.addEventListener('input', (e) => {
+        const f = e.target;
+        if (!f.name) return;
+        if (f.name === 'stock' || f.name === 'min_stock') {
+          state.productEdit[f.name] = Math.max(0, parseInt(f.value, 10) || 0);
+        } else {
+          state.productEdit[f.name] = f.value;
+        }
+      });
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitProduct();
+      });
+      setTimeout(() => $('#p-name').focus(), 50);
+    }
+
+    function stepStock(field, delta) {
+      const input = field === 'stock' ? $('#p-stock') : $('#p-min');
+      const next = Math.max(0, (parseInt(input.value, 10) || 0) + delta);
+      input.value = next;
+      state.productEdit[field] = next;
+    }
+
+    async function openCategoryProductSheet() {
+      await ensureCategories();
+      const opts = state.stock.categories.map(c => ({ value: String(c.id), label: c.name }));
+      if (!opts.length) {
+        toast('No hay categorías cargadas. Crea una desde el admin de Django.', 'error');
+        return;
+      }
+      openSheet({
+        title: 'Categoría del Producto',
+        options: opts,
+        onSelect: (opt) => {
+          const cat = state.stock.categories.find(c => String(c.id) === opt.value);
+          state.productEdit.category = cat ? { id: cat.id, name: cat.name } : null;
+          const lbl = $('#p-cat-label'); const btn = $('#p-cat-btn');
+          if (lbl) lbl.textContent = state.productEdit.category ? state.productEdit.category.name : 'Categoría del Producto';
+          if (btn) btn.classList.toggle('empty', !state.productEdit.category);
+        },
+      });
+    }
+
+    async function submitProduct() {
+      const p = state.productEdit;
+      const errBox = $('#p-error');
+      const bar    = $('#p-confirm');
+      errBox.hidden = true;
+
+      if (!p.code.trim())          return showFormErr(errBox, 'El código es requerido.');
+      if (!p.name.trim())          return showFormErr(errBox, 'El nombre es requerido.');
+      if (!p.category)             return showFormErr(errBox, 'Selecciona una categoría.');
+      if (!p.sale_price)           return showFormErr(errBox, 'El precio de venta es requerido.');
+      if (Number(p.sale_price) <= 0) return showFormErr(errBox, 'El precio debe ser mayor a 0.');
+      if (Number(p.stock) < 0)     return showFormErr(errBox, 'El stock no puede ser negativo.');
+
+      const body = {
+        code: p.code.trim(),
+        name: p.name.trim(),
+        description: p.description.trim(),
+        category: p.category.id,
+        sale_price: String(p.sale_price),
+        stock: Number(p.stock),
+        min_stock: Number(p.min_stock),
+        is_active: !!p.is_active,
+      };
+      if (p.cost_price !== '' && p.cost_price !== null && p.cost_price !== undefined) {
+        body.cost_price = String(p.cost_price);
+      }
+
+      bar.classList.add('busy');
+      try {
+        if (p.id) {
+          await api('/api/products/' + p.id + '/', { method: 'PATCH', body });
+          toast('Producto actualizado.');
+        } else {
+          await api('/api/products/', { method: 'POST', body });
+          toast('Producto creado.');
+        }
+        navigate('inventario/stock');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo guardar el producto.'));
+      }
+    }
+
+    // ── Pedidos: índice ─────────────────────────────────────────────────────
+    function viewPedidosIndex() {
+      const isAdmin = (state.role === 'ADMIN');
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Pedidos</h1>
+        </header>
+        <nav class="px-4 py-5 flex flex-col gap-4" aria-label="Opciones de pedidos">
+          ${isAdmin ? `
+            <button type="button" class="card-tile" data-action="start-po">
+              <span class="tile-icon" aria-hidden="true">${ICONS.factory}</span>
+              <span>Realizar Pedido</span>
+            </button>
+            <button type="button" class="card-tile" data-action="go" data-to="inventario/pedidos/recibir">
+              <span class="tile-icon" aria-hidden="true">${ICONS.box}</span>
+              <span>Recibir Pedido</span>
+            </button>
+            <button type="button" class="card-tile" data-action="go" data-to="inventario/pedidos/nuevo-proveedor">
+              <span class="tile-icon" aria-hidden="true">${ICONS.user}</span>
+              <span>Nuevo Proveedor</span>
+            </button>
+          ` : `
+            <p class="text-sm text-gray-600 text-center px-6">
+              Solo el ADMIN puede gestionar pedidos a proveedores.
+            </p>
+          `}
+        </nav>
+      `;
+    }
+
+    function startPurchaseOrder() {
+      state.poCart = { supplier: null, items: [], pending_product: null, notes: '' };
+      navigate('inventario/pedidos/realizar');
+    }
+
+    // ── Pedidos · Realizar: seleccionar proveedor ───────────────────────────
+    function viewSelectSupplier() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Seleccionar Proveedor</h1>
+        </header>
+        <section class="px-4 py-4">
+          <div class="search-pill">
+            <span aria-hidden="true" class="text-gray-700">${ICONS.search}</span>
+            <input id="sup-search" type="search" inputmode="search" placeholder="Buscar proveedor" aria-label="Buscar proveedor">
+            <button type="button" class="clear" data-action="clear-search" data-target="sup-search" aria-label="Limpiar">${ICONS.x}</button>
+          </div>
+          <div id="sup-results" class="mt-3" aria-live="polite">
+            <p class="text-center text-gray-500 py-6 text-sm">Cargando…</p>
+          </div>
+        </section>
+      `;
+    }
+
+    async function afterSelectSupplier() {
+      const input = $('#sup-search');
+      const run = debounce(() => loadSuppliers(input.value.trim()), 280);
+      input.addEventListener('input', run);
+      await loadSuppliers('');
+    }
+
+    async function loadSuppliers(q) {
+      const box = $('#sup-results');
+      if (!box) return;
+      box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Cargando…</p>';
+      try {
+        const url = '/api/suppliers/?page_size=50&is_active=true' +
+                    (q ? '&search=' + encodeURIComponent(q) : '');
+        const data = await api(url);
+        const rows = data.results || data;
+        if (!rows.length) {
+          box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Sin proveedores.</p>';
+          return;
+        }
+        rows.forEach(s => { _rows.suppliers[s.id] = s; });
+        box.innerHTML = rows.map(s => `
+          <button type="button" class="supplier-row w-full text-left" data-action="pick-supplier" data-id="${s.id}">
+            <div>
+              <div class="sname">${esc(s.business_name)}</div>
+              <div class="smeta">NIT: ${esc(s.nit)}</div>
+              ${s.phone ? `<div class="smeta">Teléfono: ${esc(s.phone)}</div>` : ''}
+            </div>
+            <span aria-hidden="true" class="savatar">${ICONS.user}</span>
+          </button>
+        `).join('');
+      } catch (err) {
+        box.innerHTML = '<p class="text-center text-red-600 py-6 text-sm">Error al cargar proveedores.</p>';
+      }
+    }
+
+    function pickSupplier(id) {
+      const s = _rows.suppliers[id];
+      if (!s) return;
+      state.poCart.supplier = { id: s.id, business_name: s.business_name };
+      navigate('inventario/pedidos/realizar/carrito');
+    }
+
+    // ── Pedidos · Realizar: carrito ─────────────────────────────────────────
+    function viewPOCarrito() {
+      const c = state.poCart;
+      if (!c.supplier) { navigate('inventario/pedidos/realizar'); return ''; }
+      const total = c.items.reduce((s, it) => s + Number(it.unit_cost) * it.quantity, 0);
+      const canConfirm = c.items.length > 0;
+
+      const itemsHtml = c.items.length === 0
+        ? `<p class="text-center text-gray-500 py-8 text-sm">Aún no has agregado productos.</p>`
+        : c.items.map((it, idx) => `
+            <div class="cart-row">
+              <div>
+                <div class="pname">${esc(it.name)}</div>
+                <div class="qty">${it.quantity} <span class="text-gray-400">·</span> Costo ${fmtCOP(it.unit_cost)}</div>
+              </div>
+              <div class="price">${fmtCOP(Number(it.unit_cost) * it.quantity)}</div>
+              <button type="button" class="trash" data-action="po-remove-item" data-idx="${idx}" aria-label="Quitar ${esc(it.name)}">
+                ${ICONS.trash}
+              </button>
+            </div>
+          `).join('');
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos/realizar" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Carrito Pedido</h1>
+        </header>
+
+        <section class="px-4 pt-2 pb-6">
+          <div class="customer-strip">
+            <span aria-hidden="true" class="text-gray-500">${ICONS.user}</span>
+            <div>
+              <div class="label">Proveedor:</div>
+              <div class="name">${esc(c.supplier.business_name)}</div>
+            </div>
+          </div>
+
+          <div class="mt-2">${itemsHtml}</div>
+
+          <button type="button" class="add-tile" data-action="go" data-to="inventario/pedidos/realizar/buscar-producto" aria-label="Agregar producto">
+            <span aria-hidden="true">${ICONS.plus}</span>
+          </button>
+
+          <div class="total-row">
+            <span class="label">Total:</span>
+            <span class="value">${fmtCOP(total)}</span>
+          </div>
+
+          <p id="po-error" class="field-error" hidden></p>
+
+          <div id="po-confirm" class="confirm-bar ${canConfirm ? 'ready' : ''}" role="group" aria-label="Confirmar pedido">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="button" data-action="submit-po" ${canConfirm ? '' : 'disabled'}>
+              ${canConfirm ? 'Confirmar' : 'Agrega productos primero'}
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    // ── Pedidos · Realizar: buscar producto (con foco en costo) ─────────────
+    function viewPOBuscarProducto() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos/realizar/carrito" aria-label="Volver al carrito">
+            ${ICONS.back}
+          </button>
+          <h1>Buscar Producto</h1>
+        </header>
+        <section class="px-4 py-4">
+          <div class="search-pill">
+            <span aria-hidden="true" class="text-gray-700">${ICONS.search}</span>
+            <input id="po-prod-search" type="search" inputmode="search" placeholder="Buscar Producto" aria-label="Buscar producto">
+            <button type="button" class="clear" data-action="clear-search" data-target="po-prod-search" aria-label="Limpiar">${ICONS.x}</button>
+          </div>
+          <div id="po-prod-results" class="mt-3" aria-live="polite">
+            <p class="text-center text-gray-500 py-6 text-sm">Escribe para buscar.</p>
+          </div>
+        </section>
+      `;
+    }
+
+    function afterPOBuscarProducto() {
+      const input = $('#po-prod-search');
+      const box   = $('#po-prod-results');
+      const run = debounce(async (q) => {
+        if (!q) { box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Escribe para buscar.</p>'; return; }
+        box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Buscando…</p>';
+        try {
+          const data = await api('/api/products/?search=' + encodeURIComponent(q) + '&page_size=20');
+          const rows = data.results || data;
+          if (!rows.length) { box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Sin resultados.</p>'; return; }
+          rows.forEach(p => { _rows.products[p.id] = p; });
+          box.innerHTML = rows.map(p => `
+            <div class="product-row">
+              <div>
+                <div class="pname">${esc(p.name)}</div>
+                <div class="pdesc">${esc(p.description || ('Código: ' + (p.code || '—')))}</div>
+                <div class="pprice">Venta: ${fmtCOP(p.sale_price)}${p.cost_price !== undefined ? ` · Costo ref: ${fmtCOP(p.cost_price)}` : ''}</div>
+                <div class="text-xs text-gray-400 mt-1">Stock actual: ${Number(p.stock)}</div>
+              </div>
+              <button type="button" class="add-cart" data-action="po-pick-product" data-id="${p.id}" aria-label="Agregar ${esc(p.name)}">
+                ${ICONS.plusCart}
+              </button>
+            </div>
+          `).join('');
+        } catch (err) {
+          box.innerHTML = '<p class="text-center text-red-600 py-6 text-sm">Error al buscar.</p>';
+        }
+      }, 280);
+      input.addEventListener('input', () => run(input.value.trim()));
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function poPickProduct(id) {
+      const p = _rows.products[id];
+      if (!p) return;
+      state.poCart.pending_product = p;
+      navigate('inventario/pedidos/realizar/cantidad');
+    }
+
+    // ── Pedidos · Realizar: cantidad + costo unitario ───────────────────────
+    function viewPOCantidad() {
+      const p = state.poCart.pending_product;
+      if (!p) return viewPOBuscarProducto();
+      const defaultCost = (p.cost_price !== undefined && Number(p.cost_price) > 0)
+        ? p.cost_price
+        : '';
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos/realizar/buscar-producto" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Cantidad y Costo</h1>
+        </header>
+
+        <section class="px-6 py-6 flex flex-col gap-5">
+          <div>
+            <div class="text-sm text-gray-500">Producto</div>
+            <div class="text-lg font-semibold">${esc(p.name)}</div>
+            <div class="text-sm text-gray-500">Código: ${esc(p.code || '—')} · Stock actual: ${Number(p.stock)}</div>
+          </div>
+
+          <div>
+            <label class="field-label" for="po-qty">Cantidad a pedir</label>
+            <input id="po-qty" type="number" inputmode="numeric" min="1" step="1"
+                   value="1" class="field-input" required>
+          </div>
+
+          <div>
+            <label class="field-label" for="po-cost">Costo unitario</label>
+            <input id="po-cost" type="number" inputmode="numeric" min="0.01" step="100"
+                   value="${esc(defaultCost)}" class="field-input" required
+                   placeholder="Ej: 30000">
+          </div>
+
+          <div class="text-center">
+            <div class="text-base text-gray-700">Subtotal:</div>
+            <div id="po-qty-total" class="text-3xl font-bold mt-1" style="color: var(--money)">${fmtCOP(defaultCost || 0)}</div>
+          </div>
+
+          <p id="po-qty-error" class="field-error" hidden></p>
+
+          <div class="flex justify-center mt-2">
+            <button type="button" class="btn-primary w-full max-w-xs" data-action="po-accept-qty">Aceptar</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function afterPOCantidad() {
+      const recalc = () => {
+        const q = parseInt($('#po-qty').value, 10) || 0;
+        const c = parseFloat($('#po-cost').value) || 0;
+        $('#po-qty-total').textContent = fmtCOP(q * c);
+      };
+      $('#po-qty').addEventListener('input', recalc);
+      $('#po-cost').addEventListener('input', recalc);
+      recalc();
+      setTimeout(() => $('#po-qty').select(), 50);
+    }
+
+    function poAcceptQty() {
+      const p = state.poCart.pending_product;
+      if (!p) return;
+      const errBox = $('#po-qty-error');
+      const q = parseInt($('#po-qty').value, 10);
+      const c = parseFloat($('#po-cost').value);
+      errBox.hidden = true;
+      if (!q || q < 1)  return showFormErr(errBox, 'La cantidad debe ser ≥ 1.');
+      if (!c || c <= 0) return showFormErr(errBox, 'El costo unitario debe ser mayor a 0.');
+
+      const existing = state.poCart.items.find(it => it.product_id === p.id);
+      if (existing) {
+        existing.quantity += q;
+        existing.unit_cost = c;  // last entered cost wins
+      } else {
+        state.poCart.items.push({
+          product_id: p.id, name: p.name,
+          unit_cost: c, quantity: q,
+        });
+      }
+      state.poCart.pending_product = null;
+      navigate('inventario/pedidos/realizar/carrito');
+    }
+
+    function poRemoveItem(idx) {
+      state.poCart.items.splice(idx, 1);
+      render();
+    }
+
+    async function submitPurchaseOrder() {
+      const c = state.poCart;
+      const errBox = $('#po-error');
+      const bar    = $('#po-confirm');
+      errBox.hidden = true;
+      if (!c.supplier) return showFormErr(errBox, 'Selecciona un proveedor.');
+      if (c.items.length === 0) return showFormErr(errBox, 'Agrega al menos un producto.');
+
+      bar.classList.add('busy');
+      try {
+        const po = await api('/api/purchase-orders/', {
+          method: 'POST',
+          body: {
+            supplier: c.supplier.id,
+            notes: c.notes || '',
+            items: c.items.map(it => ({
+              product: it.product_id,
+              quantity: it.quantity,
+              unit_cost: String(it.unit_cost),
+            })),
+          },
+        });
+        state.poCart = { supplier: null, items: [], pending_product: null, notes: '' };
+        toast('Pedido OC-' + String(po.id).padStart(6, '0') + ' creado.');
+        navigate('inventario/pedidos');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo crear el pedido.'));
+      }
+    }
+
+    // ── Pedidos · Recibir: seleccionar pedido pendiente ─────────────────────
+    function viewSelectPOForReceive() {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Seleccionar Pedido</h1>
+        </header>
+        <section class="px-4 py-4">
+          <p class="text-sm text-gray-600 mb-2">Pedidos pendientes de recepción.</p>
+          <div id="po-list" aria-live="polite">
+            <p class="text-center text-gray-500 py-6 text-sm">Cargando…</p>
+          </div>
+        </section>
+      `;
+    }
+
+    async function afterSelectPOForReceive() {
+      const box = $('#po-list');
+      try {
+        // Backend lacks a status filter on PurchaseOrder; pull recent and filter client-side.
+        const data = await api('/api/purchase-orders/?page_size=100&ordering=-created_at');
+        const rows = (data.results || data)
+          .filter(o => o.status === 'DRAFT' || o.status === 'SENT');
+        if (!rows.length) {
+          box.innerHTML = '<p class="text-center text-gray-500 py-6 text-sm">Sin pedidos pendientes.</p>';
+          return;
+        }
+        rows.forEach(o => { _rows.purchaseOrders[o.id] = o; });
+        box.innerHTML = rows.map(o => {
+          const total = (o.items || []).reduce((s, it) => s + Number(it.unit_cost) * it.quantity, 0);
+          const d = new Date(o.created_at);
+          const dStr = d.toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+          return `
+            <button type="button" class="po-row w-full text-left" data-action="pick-po" data-id="${o.id}">
+              <div>
+                <div class="sname">${esc(o.supplier_name || ('Proveedor #' + o.supplier))}</div>
+                <div class="smeta">OC-${String(o.id).padStart(6,'0')} · ${esc(dStr)} · ${esc(o.status)}</div>
+                <div class="pprice" style="color: var(--money); font-weight: 600">${fmtCOP(total)}</div>
+              </div>
+              <span aria-hidden="true" class="savatar">${ICONS.hand}</span>
+            </button>
+          `;
+        }).join('');
+      } catch (err) {
+        box.innerHTML = '<p class="text-center text-red-600 py-6 text-sm">Error al cargar pedidos.</p>';
+      }
+    }
+
+    function pickPOForReceive(id) {
+      const o = _rows.purchaseOrders[id];
+      if (!o) return;
+      state.poReceive.order = o;
+      state.poReceive.checked = {};
+      navigate('inventario/pedidos/recibir/detalle');
+    }
+
+    // ── Pedidos · Recibir: detalle con checkboxes + confirmar ───────────────
+    function viewPOReceiveDetail() {
+      const o = state.poReceive.order;
+      if (!o) { navigate('inventario/pedidos/recibir'); return ''; }
+      const total = (o.items || []).reduce((s, it) => s + Number(it.unit_cost) * it.quantity, 0);
+      const checked = state.poReceive.checked;
+
+      const itemsHtml = (o.items || []).map(it => `
+        <div class="recv-row">
+          <div>
+            <div class="pname">${esc(it.product_name || ('Producto #' + it.product))}</div>
+            <div class="qty">${it.quantity} <span class="text-gray-400">·</span> ${fmtCOP(it.unit_cost)}</div>
+          </div>
+          <div class="price">${fmtCOP(Number(it.unit_cost) * it.quantity)}</div>
+          <button type="button" class="chk" data-action="toggle-recv" data-id="${it.id}"
+                  aria-pressed="${checked[it.id] ? 'true' : 'false'}"
+                  aria-label="Confirmar recibido: ${esc(it.product_name || '')}">
+            ${checked[it.id] ? ICONS.check : ''}
+          </button>
+        </div>
+      `).join('');
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos/recibir" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Recibir Pedido</h1>
+        </header>
+
+        <section class="px-4 pt-2 pb-6">
+          <div class="customer-strip">
+            <span aria-hidden="true" class="text-gray-500">${ICONS.user}</span>
+            <div>
+              <div class="label">Proveedor:</div>
+              <div class="name">${esc(o.supplier_name || '—')}</div>
+            </div>
+          </div>
+
+          <div class="mt-2">${itemsHtml}</div>
+
+          <div class="total-row">
+            <span class="label">Total:</span>
+            <span class="value">${fmtCOP(total)}</span>
+          </div>
+
+          <p class="text-xs text-gray-500">
+            La recepción aplica al pedido completo y suma el stock de todos los productos.
+            Los checkboxes son verificación visual.
+          </p>
+          <p id="recv-error" class="field-error" hidden></p>
+
+          <div id="recv-confirm" class="confirm-bar ready" role="group" aria-label="Confirmar recepción">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="button" data-action="submit-receive">Confirmar</button>
+          </div>
+        </section>
+      `;
+    }
+
+    function toggleRecvCheck(itemId) {
+      state.poReceive.checked[itemId] = !state.poReceive.checked[itemId];
+      // Patch only the affected checkbox to avoid losing scroll position
+      const btn = document.querySelector(`.chk[data-id="${itemId}"]`);
+      if (btn) {
+        const on = !!state.poReceive.checked[itemId];
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        btn.innerHTML = on ? ICONS.check : '';
+      }
+    }
+
+    async function submitReceive() {
+      const o = state.poReceive.order;
+      if (!o) return;
+      const errBox = $('#recv-error');
+      const bar    = $('#recv-confirm');
+      errBox.hidden = true;
+
+      const total = (o.items || []).length;
+      const done = Object.values(state.poReceive.checked).filter(Boolean).length;
+      if (done < total) {
+        if (!confirm(`Solo marcaste ${done} de ${total} productos. ¿Confirmar la recepción del pedido completo?`)) {
+          return;
+        }
+      }
+
+      bar.classList.add('busy');
+      try {
+        await api('/api/purchase-orders/' + o.id + '/receive/', { method: 'POST' });
+        toast('Pedido OC-' + String(o.id).padStart(6,'0') + ' recibido. Stock actualizado.');
+        state.poReceive = { order: null, checked: {} };
+        navigate('inventario/pedidos');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo confirmar la recepción.'));
+      }
+    }
+
+    // ── Pedidos · Nuevo Proveedor ───────────────────────────────────────────
+    function viewNuevoProveedor() {
+      const s = state.newSupplier;
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="inventario/pedidos" aria-label="Volver">
+            ${ICONS.back}
+          </button>
+          <h1>Nuevo Proveedor</h1>
+        </header>
+
+        <form id="sup-form" novalidate class="px-6 py-5 flex flex-col gap-5">
+          <div>
+            <label class="field-label" for="s-name">Razón Social</label>
+            <input id="s-name" name="business_name" class="field-input"
+                   value="${esc(s.business_name)}" maxlength="255" required
+                   placeholder="Nombre de la Empresa">
+          </div>
+
+          <div>
+            <label class="field-label" for="s-nit">NIT</label>
+            <input id="s-nit" name="nit" class="field-input"
+                   value="${esc(s.nit)}" maxlength="20" required
+                   placeholder="900000001-1">
+          </div>
+
+          <div>
+            <label class="field-label" for="s-contact">Nombre del Vendedor</label>
+            <input id="s-contact" name="contact_name" class="field-input"
+                   value="${esc(s.contact_name)}" maxlength="255"
+                   placeholder="Nombre del Vendedor">
+          </div>
+
+          <div>
+            <label class="field-label" for="s-phone">Número de Teléfono</label>
+            <input id="s-phone" name="phone" class="field-input" type="tel" inputmode="tel"
+                   value="${esc(s.phone)}" maxlength="20" placeholder="Contacto del Vendedor">
+          </div>
+
+          <div>
+            <label class="field-label" for="s-email">E-mail</label>
+            <input id="s-email" name="email" class="field-input" type="email"
+                   value="${esc(s.email)}" placeholder="proveedor@dominio.com">
+          </div>
+
+          <div>
+            <label class="field-label" for="s-address">Dirección</label>
+            <input id="s-address" name="address" class="field-input"
+                   value="${esc(s.address)}" placeholder="Dirección (opcional)">
+          </div>
+
+          <p id="s-error" class="field-error" hidden></p>
+
+          <div class="confirm-bar ready" id="s-confirm" role="group" aria-label="Confirmar nuevo proveedor">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Confirmar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterNuevoProveedor() {
+      const form = $('#sup-form');
+      form.addEventListener('input', (e) => {
+        if (!e.target.name) return;
+        state.newSupplier[e.target.name] = e.target.value;
+      });
+      form.addEventListener('submit', (e) => { e.preventDefault(); submitNuevoProveedor(); });
+      setTimeout(() => $('#s-name').focus(), 50);
+    }
+
+    async function submitNuevoProveedor() {
+      const s = state.newSupplier;
+      const errBox = $('#s-error');
+      const bar    = $('#s-confirm');
+      errBox.hidden = true;
+
+      if (!s.business_name.trim()) return showFormErr(errBox, 'La razón social es requerida.');
+      if (!s.nit.trim())           return showFormErr(errBox, 'El NIT es requerido.');
+      if (s.email && !/^\S+@\S+\.\S+$/.test(s.email)) {
+        return showFormErr(errBox, 'El email no tiene un formato válido.');
+      }
+
+      bar.classList.add('busy');
+      try {
+        const created = await api('/api/suppliers/', {
+          method: 'POST',
+          body: {
+            business_name: s.business_name.trim(),
+            nit: s.nit.trim(),
+            contact_name: s.contact_name.trim(),
+            phone: s.phone.trim(),
+            email: s.email.trim(),
+            address: s.address.trim(),
+            is_active: true,
+          },
+        });
+        state.newSupplier = { business_name: '', nit: '', contact_name: '', phone: '', email: '', address: '' };
+        toast('Proveedor "' + created.business_name + '" creado.');
+        navigate('inventario/pedidos');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo crear el proveedor.'));
+      }
+    }
+
+    // ── Caja: vista principal (auto-detecta estado) ─────────────────────────
+    function viewCajaIndex() {
+      const c = state.caja;
+      const isAdmin = (state.role === 'ADMIN');
+
+      // Loading state
+      if (c.active === null && c.balance === null) {
+        return `
+          <header class="app-header" role="banner">
+            <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">${ICONS.home}</button>
+            <h1>Caja</h1>
+          </header>
+          <section class="px-6 py-8"><p class="text-center text-gray-500">Cargando estado de caja…</p></section>
+        `;
+      }
+
+      // No open register → CTA to open
+      if (!c.active) {
+        const last = c.lastClosed;
+        return `
+          <header class="app-header" role="banner">
+            <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">${ICONS.home}</button>
+            <h1>Caja</h1>
+            <button type="button" class="icon-btn" data-action="go" data-to="caja/historial" aria-label="Historial">${ICONS.doc}</button>
+          </header>
+          <section class="px-6 py-6 flex flex-col gap-5 items-center">
+            <p class="text-center text-gray-600">No hay caja abierta en este momento.</p>
+            ${last ? `
+              <div class="w-full" style="background: var(--lavender); border-radius: 14px; padding: 16px;">
+                <p class="text-sm font-semibold mb-2">Último cierre (Caja #${last.id})</p>
+                <div class="kpi-grid">
+                  <div class="kpi"><div class="lbl">Esperado</div><div class="val">${fmtCOP(last.expected_amount)}</div></div>
+                  <div class="kpi"><div class="lbl">Contado</div><div class="val">${fmtCOP(last.closing_amount)}</div></div>
+                  <div class="kpi diff ${Number(last.difference) < 0 ? 'negative' : 'positive'}" style="grid-column: span 2">
+                    <div class="lbl">Diferencia</div>
+                    <div class="val">${fmtCOP(last.difference)}</div>
+                  </div>
+                </div>
+              </div>
+            ` : ''}
+            <button type="button" class="btn-primary w-full max-w-xs" data-action="go" data-to="caja/abrir">Abrir Caja</button>
+          </section>
+        `;
+      }
+
+      // Active register → balance + actions
+      const b = c.balance || {};
+      const opened = new Date(c.active.opened_at);
+      const openedStr = opened.toLocaleString('es-CO', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">${ICONS.home}</button>
+          <h1>Caja</h1>
+          <button type="button" class="icon-btn" data-action="go" data-to="caja/historial" aria-label="Historial">${ICONS.doc}</button>
+        </header>
+
+        <section class="px-4 py-4 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <span class="status-pill open">Caja #${c.active.id} · Abierta</span>
+            <button type="button" class="text-sm text-indigo-700 underline" data-action="refresh-caja">Actualizar</button>
+          </div>
+          <p class="text-xs text-gray-500 -mt-2">Abierta ${esc(openedStr)}</p>
+
+          <div class="kpi-grid">
+            <div class="kpi"><div class="lbl">Apertura</div><div class="val">${fmtCOP(b.opening_amount || c.active.opening_amount)}</div></div>
+            <div class="kpi income"><div class="lbl">Ingresos</div><div class="val">${fmtCOP(b.income || 0)}</div></div>
+            <div class="kpi expense"><div class="lbl">Egresos</div><div class="val">${fmtCOP(b.expense || 0)}</div></div>
+            <div class="kpi balance"><div class="lbl">Saldo actual</div><div class="val">${fmtCOP(b.balance || 0)}</div></div>
+          </div>
+
+          <div class="flex flex-col gap-3 mt-4">
+            ${isAdmin ? `
+              <button type="button" class="card-tile" data-action="go" data-to="caja/retirar">
+                <span class="tile-icon" aria-hidden="true">${ICONS.register}</span>
+                <span>Registrar Retiro</span>
+              </button>
+            ` : `
+              <p class="text-xs text-gray-500 px-2">Solo el ADMIN puede registrar retiros.</p>
+            `}
+            <button type="button" class="card-tile" data-action="go" data-to="caja/cerrar">
+              <span class="tile-icon" aria-hidden="true" style="background: var(--danger-soft); color: var(--danger-soft-fg)">${ICONS.x}</span>
+              <span>Cerrar Caja</span>
+            </button>
+          </div>
+        </section>
+      `;
+    }
+
+    async function afterCajaIndex() {
+      await refreshCaja();
+    }
+
+    async function refreshCaja() {
+      try {
+        const data = await api('/api/cash-registers/?ordering=-opened_at&page_size=10');
+        const rows = data.results || data;
+        const open = rows.find(r => r.status === 'OPEN');
+        state.caja.active = open || null;
+        if (open) {
+          try {
+            state.caja.balance = await api('/api/cash-registers/' + open.id + '/balance/');
+          } catch (_) { state.caja.balance = null; }
+        } else {
+          state.caja.balance = null;
+        }
+      } catch (err) {
+        toast('Error al cargar caja.', 'error');
+        state.caja.active = null;
+      }
+      if (state.route === 'caja') render();
+    }
+
+    // ── Caja: abrir ─────────────────────────────────────────────────────────
+    function viewCajaAbrir() {
+      const c = state.caja;
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="caja" aria-label="Volver">${ICONS.back}</button>
+          <h1>Abrir Caja</h1>
+        </header>
+        <form id="caja-abrir-form" class="px-6 py-6 flex flex-col gap-5" novalidate>
+          <p class="text-sm text-gray-600">Indica el monto en efectivo con el que inicias el turno.</p>
+          <div>
+            <label class="field-label" for="ca-amount">Monto de apertura</label>
+            <input id="ca-amount" name="opening_amount" class="field-input" type="number"
+                   min="0" step="1000" inputmode="numeric" required
+                   value="${esc(c.opening_amount)}" placeholder="50000">
+          </div>
+          <p id="ca-error" class="field-error" hidden></p>
+          <div class="confirm-bar ready" id="ca-confirm" role="group" aria-label="Confirmar apertura">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Confirmar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterCajaAbrir() {
+      const form = $('#caja-abrir-form');
+      form.addEventListener('input', (e) => {
+        if (e.target.name === 'opening_amount') state.caja.opening_amount = e.target.value;
+      });
+      form.addEventListener('submit', (e) => { e.preventDefault(); submitAbrirCaja(); });
+      setTimeout(() => $('#ca-amount').focus(), 50);
+    }
+
+    async function submitAbrirCaja() {
+      const errBox = $('#ca-error');
+      const bar    = $('#ca-confirm');
+      errBox.hidden = true;
+      const amt = parseFloat(state.caja.opening_amount);
+      if (!Number.isFinite(amt) || amt < 0) {
+        return showFormErr(errBox, 'Indica un monto válido (≥ 0).');
+      }
+      bar.classList.add('busy');
+      try {
+        await api('/api/cash-registers/', {
+          method: 'POST',
+          body: { opening_amount: String(amt) },
+        });
+        state.caja.opening_amount = '';
+        state.caja.lastClosed = null;
+        toast('Caja abierta correctamente.');
+        await refreshCaja();
+        navigate('caja');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo abrir la caja.'));
+      }
+    }
+
+    // ── Caja: retirar (ADMIN only) ──────────────────────────────────────────
+    function viewCajaRetirar() {
+      const c = state.caja;
+      if (!c.active) { navigate('caja'); return ''; }
+      const available = (c.balance && c.balance.balance) ? c.balance.balance : 0;
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="caja" aria-label="Volver">${ICONS.back}</button>
+          <h1>Registrar Retiro</h1>
+        </header>
+        <form id="caja-w-form" class="px-6 py-6 flex flex-col gap-5" novalidate>
+          <div style="background: var(--lavender); border-radius: 12px; padding: 12px 16px">
+            <div class="text-xs text-gray-600">Saldo disponible</div>
+            <div class="text-2xl font-bold" style="color: var(--money)">${fmtCOP(available)}</div>
+          </div>
+
+          <div>
+            <label class="field-label" for="cw-amount">Monto a retirar</label>
+            <input id="cw-amount" name="amount" class="field-input" type="number"
+                   min="0.01" step="1000" inputmode="numeric" required
+                   value="${esc(c.withdraw.amount)}" placeholder="20000">
+          </div>
+
+          <div>
+            <label class="field-label" for="cw-concept">Motivo del retiro</label>
+            <input id="cw-concept" name="concept" class="field-input" maxlength="255" required
+                   value="${esc(c.withdraw.concept)}" placeholder="Ej: Pago servicios públicos">
+          </div>
+
+          <p id="cw-error" class="field-error" hidden></p>
+          <div class="confirm-bar ready" id="cw-confirm" role="group" aria-label="Confirmar retiro">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Confirmar</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterCajaRetirar() {
+      const form = $('#caja-w-form');
+      form.addEventListener('input', (e) => {
+        const f = e.target;
+        if (f.name === 'amount' || f.name === 'concept') state.caja.withdraw[f.name] = f.value;
+      });
+      form.addEventListener('submit', (e) => { e.preventDefault(); submitRetiro(); });
+      setTimeout(() => $('#cw-amount').focus(), 50);
+    }
+
+    async function submitRetiro() {
+      const c = state.caja;
+      const errBox = $('#cw-error');
+      const bar    = $('#cw-confirm');
+      errBox.hidden = true;
+      const amt = parseFloat(c.withdraw.amount);
+      if (!Number.isFinite(amt) || amt <= 0) return showFormErr(errBox, 'Indica un monto mayor a 0.');
+      if (!c.withdraw.concept.trim())        return showFormErr(errBox, 'El motivo es requerido.');
+      bar.classList.add('busy');
+      try {
+        const res = await api('/api/cash-registers/' + c.active.id + '/withdraw/', {
+          method: 'POST',
+          body: { amount: String(amt), concept: c.withdraw.concept.trim() },
+        });
+        state.caja.withdraw = { amount: '', concept: '' };
+        toast('Retiro registrado. Nuevo saldo: ' + fmtCOP(res.new_balance));
+        await refreshCaja();
+        navigate('caja');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo registrar el retiro.'));
+      }
+    }
+
+    // ── Caja: cerrar ────────────────────────────────────────────────────────
+    function viewCajaCerrar() {
+      const c = state.caja;
+      if (!c.active) { navigate('caja'); return ''; }
+      const expected = (c.balance && c.balance.balance) ? c.balance.balance : c.active.opening_amount;
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="caja" aria-label="Volver">${ICONS.back}</button>
+          <h1>Cerrar Caja</h1>
+        </header>
+        <form id="caja-c-form" class="px-6 py-6 flex flex-col gap-5" novalidate>
+          <div style="background: var(--lavender); border-radius: 12px; padding: 12px 16px">
+            <div class="text-xs text-gray-600">Esperado en caja (según movimientos)</div>
+            <div class="text-2xl font-bold">${fmtCOP(expected)}</div>
+          </div>
+
+          <div>
+            <label class="field-label" for="cc-amount">Monto real contado en efectivo</label>
+            <input id="cc-amount" name="closing_amount" class="field-input" type="number"
+                   min="0" step="1000" inputmode="numeric" required
+                   value="${esc(c.closing_amount)}" placeholder="${Number(expected).toFixed(0)}">
+            <p class="field-hint">La diferencia se calcula al cerrar.</p>
+          </div>
+
+          <p id="cc-error" class="field-error" hidden></p>
+          <div class="confirm-bar ready" id="cc-confirm" role="group" aria-label="Confirmar cierre">
+            <span class="knob" aria-hidden="true">${ICONS.chevron}</span>
+            <button type="submit">Cerrar caja</button>
+          </div>
+        </form>
+      `;
+    }
+
+    function afterCajaCerrar() {
+      const form = $('#caja-c-form');
+      form.addEventListener('input', (e) => {
+        if (e.target.name === 'closing_amount') state.caja.closing_amount = e.target.value;
+      });
+      form.addEventListener('submit', (e) => { e.preventDefault(); submitCerrarCaja(); });
+      setTimeout(() => $('#cc-amount').focus(), 50);
+    }
+
+    async function submitCerrarCaja() {
+      const c = state.caja;
+      const errBox = $('#cc-error');
+      const bar    = $('#cc-confirm');
+      errBox.hidden = true;
+      const amt = parseFloat(c.closing_amount);
+      if (!Number.isFinite(amt) || amt < 0) return showFormErr(errBox, 'Indica un monto válido (≥ 0).');
+      bar.classList.add('busy');
+      try {
+        const closed = await api('/api/cash-registers/' + c.active.id + '/close/', {
+          method: 'POST',
+          body: { closing_amount: String(amt) },
+        });
+        state.caja.closing_amount = '';
+        state.caja.lastClosed = closed;
+        state.caja.active = null;
+        state.caja.balance = null;
+        const diff = Number(closed.difference);
+        const msg = diff === 0
+          ? 'Caja cerrada sin diferencias.'
+          : (diff > 0 ? 'Cierre con sobrante de ' + fmtCOP(diff) : 'Cierre con faltante de ' + fmtCOP(Math.abs(diff)));
+        toast(msg);
+        navigate('caja');
+      } catch (err) {
+        bar.classList.remove('busy');
+        showFormErr(errBox, apiErrorMessage(err, 'No se pudo cerrar la caja.'));
+      }
+    }
+
+    // ── Caja: historial ─────────────────────────────────────────────────────
+    function viewCajaHistorial() {
+      const h = state.caja.history;
+      let body;
+      if (h === null) {
+        body = '<p class="text-center text-gray-500 py-6 text-sm">Cargando…</p>';
+      } else if (!h.length) {
+        body = '<p class="text-center text-gray-500 py-6 text-sm">Sin cierres registrados.</p>';
+      } else {
+        body = h.map(r => {
+          const diff = Number(r.difference ?? 0);
+          const dCls = diff === 0 ? '' : (diff > 0 ? 'positive' : 'negative');
+          const opened = new Date(r.opened_at);
+          const closed = r.closed_at ? new Date(r.closed_at) : null;
+          const span = (d) => d.toLocaleString('es-CO', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false });
+          return `
+            <div class="border-b border-gray-200 py-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <div class="font-semibold">Caja #${r.id}</div>
+                  <div class="text-xs text-gray-500">${esc(span(opened))} → ${closed ? esc(span(closed)) : '—'}</div>
+                </div>
+                <span class="status-pill ${r.status === 'OPEN' ? 'open' : 'closed'}">${esc(r.status === 'OPEN' ? 'Abierta' : 'Cerrada')}</span>
+              </div>
+              ${r.status === 'CLOSED' ? `
+                <div class="kpi-grid mt-3">
+                  <div class="kpi"><div class="lbl">Esperado</div><div class="val">${fmtCOP(r.expected_amount)}</div></div>
+                  <div class="kpi"><div class="lbl">Contado</div><div class="val">${fmtCOP(r.closing_amount)}</div></div>
+                  <div class="kpi diff ${dCls}" style="grid-column: span 2">
+                    <div class="lbl">Diferencia</div>
+                    <div class="val">${fmtCOP(diff)}</div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="caja" aria-label="Volver">${ICONS.back}</button>
+          <h1>Historial de Caja</h1>
+        </header>
+        <section class="px-4 py-4">${body}</section>
+      `;
+    }
+
+    async function afterCajaHistorial() {
+      state.caja.history = null;
+      try {
+        const data = await api('/api/cash-registers/?ordering=-opened_at&page_size=30');
+        state.caja.history = data.results || data;
+      } catch (err) {
+        state.caja.history = [];
+        toast('Error al cargar historial.', 'error');
+      }
+      if (state.route === 'caja/historial') render();
+    }
+
+    function viewStub(title) {
+      return `
+        <header class="app-header" role="banner">
+          <button type="button" class="icon-btn" data-action="go" data-to="menu" aria-label="Menú principal">
+            ${ICONS.home}
+          </button>
+          <h1>${esc(title)}</h1>
+        </header>
+        <section class="px-6 py-10 text-center">
+          <p class="text-base text-gray-600">Esta sección aún no está implementada.</p>
+          <p class="text-sm text-gray-400 mt-2">Próximamente.</p>
+        </section>
+      `;
+    }
+
+    // ── Bindings (after render) ──────────────────────────────────────────────
+    function afterLogin() {
+      const form = $('#login-form');
+      const user = $('#login-user');
+      const password = $('#login-password');
+      const errBox = $('#login-error');
+      const btn = $('#login-btn');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errBox.hidden = true;
+        errBox.textContent = '';
+
+        const username = user.value.trim();
+        const pwd = password.value;
+
+        if (!username) {
+          errBox.textContent = 'Ingresa tu usuario.';
+          errBox.hidden = false;
+          user.focus();
+          return;
+        }
+        if (pwd.length < 6) {
+          errBox.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+          errBox.hidden = false;
+          password.focus();
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Ingresando…';
+        try {
+          const data = await api('/api/token/', {
+            method: 'POST',
+            body: { username, password: pwd },
+          });
+          localStorage.setItem(TOKEN_KEY, data.access);
+          localStorage.setItem(REFRESH_KEY, data.refresh);
+          if (data.user) {
+            state.user = data.user.username || username;
+            state.role = data.user.role || null;
+            state.fullName = data.user.full_name || data.user.username || username;
+            localStorage.setItem(USER_KEY, state.user);
+            if (state.role)     localStorage.setItem(ROLE_KEY, state.role);
+            if (state.fullName) localStorage.setItem(FULLNAME_KEY, state.fullName);
+          } else {
+            state.user = username;
+            localStorage.setItem(USER_KEY, username);
+          }
+          navigate('menu');
+        } catch (err) {
+          let msg = 'No se pudo iniciar sesión.';
+          if (err.status === 401) msg = 'Usuario o contraseña incorrectos.';
+          else if (err.status === 423) msg = 'Cuenta bloqueada temporalmente. Intenta en 30 minutos.';
+          else if (err.data && err.data.detail) msg = err.data.detail;
+          errBox.textContent = msg;
+          errBox.hidden = false;
+          toast(msg, 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Iniciar sesión';
+        }
+      });
+
+      setTimeout(() => user.focus(), 50);
+    }
+
+    function logout() {
+      const refresh = localStorage.getItem(REFRESH_KEY);
+      if (refresh) {
+        api('/api/token/logout/', { method: 'POST', body: { refresh } }).catch(() => {});
+      }
+      [TOKEN_KEY, REFRESH_KEY, USER_KEY, ROLE_KEY, FULLNAME_KEY].forEach(k => localStorage.removeItem(k));
+      state.user = null; state.role = null; state.fullName = null;
+      navigate('login');
+    }
+
+    // ── Router ───────────────────────────────────────────────────────────────
+    const ROUTES = {
+      menu:             { view: viewMenu,                   needsAuth: true,  after: null },
+      login:            { view: viewLogin,                  needsAuth: false, after: afterLogin },
+      personas:                     { view: viewPersonasIndex,    needsAuth: true, after: null },
+      'personas/nuevo-cliente':     { view: viewNuevoCliente,     needsAuth: true, after: afterNuevoCliente },
+      'personas/nuevo-empleado':    { view: viewNuevoEmpleado,    needsAuth: true, after: afterNuevoEmpleado },
+      ventas:             { view: viewVentasIndex,                  needsAuth: true, after: afterVentasIndex },
+      'ventas/carrito':           { view: viewCarrito,              needsAuth: true, after: null },
+      'ventas/buscar-producto':   { view: viewBuscarProducto,       needsAuth: true, after: afterBuscarProducto },
+      'ventas/cantidad':          { view: viewCantidad,             needsAuth: true, after: afterCantidad },
+      'ventas/confirmar':         { view: viewConfirmarVenta,       needsAuth: true, after: afterConfirmarVenta },
+      'emitir-factura':              { view: viewFacturaFiltro,     needsAuth: true, after: afterFacturaFiltro },
+      'emitir-factura/resultados':   { view: viewFacturaResultados,  needsAuth: true, after: afterFacturaResultados },
+      'emitir-factura/preview':      { view: viewFacturaPreview,     needsAuth: true, after: null },
+      inventario:                   { view: viewInventarioIndex,  needsAuth: true, after: null },
+      'inventario/stock':           { view: viewStockList,        needsAuth: true, after: afterStockList },
+      'inventario/stock/filtros':   { view: viewStockFilters,     needsAuth: true, after: afterStockFilters },
+      'inventario/stock/nuevo':     { view: viewProductForm,      needsAuth: true, after: afterProductForm },
+      'inventario/stock/editar':    { view: viewProductForm,      needsAuth: true, after: afterProductForm },
+      'inventario/pedidos':                          { view: viewPedidosIndex,        needsAuth: true, after: null },
+      'inventario/pedidos/realizar':                 { view: viewSelectSupplier,      needsAuth: true, after: afterSelectSupplier },
+      'inventario/pedidos/realizar/carrito':         { view: viewPOCarrito,           needsAuth: true, after: null },
+      'inventario/pedidos/realizar/buscar-producto': { view: viewPOBuscarProducto,    needsAuth: true, after: afterPOBuscarProducto },
+      'inventario/pedidos/realizar/cantidad':        { view: viewPOCantidad,          needsAuth: true, after: afterPOCantidad },
+      'inventario/pedidos/recibir':                  { view: viewSelectPOForReceive,  needsAuth: true, after: afterSelectPOForReceive },
+      'inventario/pedidos/recibir/detalle':          { view: viewPOReceiveDetail,     needsAuth: true, after: null },
+      'inventario/pedidos/nuevo-proveedor':          { view: viewNuevoProveedor,      needsAuth: true, after: afterNuevoProveedor },
+      proveedores:      { view: () => { navigate('inventario/pedidos'); return ''; }, needsAuth: true, after: null },
+      caja:               { view: viewCajaIndex,      needsAuth: true, after: afterCajaIndex },
+      'caja/abrir':       { view: viewCajaAbrir,      needsAuth: true, after: afterCajaAbrir },
+      'caja/retirar':     { view: viewCajaRetirar,    needsAuth: true, after: afterCajaRetirar },
+      'caja/cerrar':      { view: viewCajaCerrar,     needsAuth: true, after: afterCajaCerrar },
+      'caja/historial':   { view: viewCajaHistorial,  needsAuth: true, after: afterCajaHistorial },
+    };
+
+    function currentRoute() {
+      const raw = (window.location.hash || '').replace(/^#\//, '');
+      return raw || (localStorage.getItem(TOKEN_KEY) ? 'menu' : 'login');
+    }
+
+    function render() {
+      const app = $('#app');
+      let route = currentRoute();
+      if (!ROUTES[route]) route = 'menu';
+      const token = localStorage.getItem(TOKEN_KEY);
+
+      if (ROUTES[route].needsAuth && !token) {
+        route = 'login';
+      } else if (route === 'login' && token) {
+        route = 'menu';
+      }
+
+      state.route = route;
+      app.innerHTML = ROUTES[route].view();
+      window.scrollTo(0, 0);
+      const after = ROUTES[route].after;
+      if (typeof after === 'function') after();
+    }
+
+    function navigate(route) {
+      if (window.location.hash === '#/' + route) {
+        render();
+      } else {
+        window.location.hash = '#/' + route;
+      }
+    }
+
+    window.addEventListener('hashchange', render);
+
+    // ── Event delegation ─────────────────────────────────────────────────────
+    document.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      const action = el.dataset.action;
+      e.preventDefault();
+      switch (action) {
+        case 'go':                navigate(el.dataset.to); break;
+        case 'logout':            logout(); break;
+        case 'clear-search': {
+          const target = $('#' + el.dataset.target);
+          if (target) { target.value = ''; target.dispatchEvent(new Event('input')); target.focus(); }
+          break;
+        }
+        case 'sale-anonymous':    cartGoAnonymous(); break;
+        case 'select-customer':   cartSelectCustomer(parseInt(el.dataset.id, 10)); break;
+        case 'pick-product':      cartPickProduct(parseInt(el.dataset.id, 10)); break;
+        case 'accept-qty':        cartAcceptQty(); break;
+        case 'remove-item':       cartRemoveItem(parseInt(el.dataset.idx, 10)); break;
+        case 'go-confirm':        cartGoConfirm(); break;
+        case 'submit-sale':       cartSubmitSale(); break;
+        case 'search-sales':      searchSalesForInvoice(); break;
+        case 'pick-sale':         pickSaleForInvoice(parseInt(el.dataset.id, 10)); break;
+        case 'emit-and-download': emitAndDownloadInvoice(); break;
+        case 'open-doc-type':     openDocTypeSheet(el.dataset.target); break;
+        case 'toggle-day':        toggleEmpleadoDay(parseInt(el.dataset.day, 10)); break;
+        case 'new-product':       startNewProduct(); break;
+        case 'edit-product':      loadProductForEdit(parseInt(el.dataset.id, 10)); break;
+        case 'open-cat-filter':   openCategoryFilterSheet(); break;
+        case 'open-cat-product':  openCategoryProductSheet(); break;
+        case 'reset-filters':     resetFiltersInPlace(); break;
+        case 'clear-filters':     clearStockFilters(); break;
+        case 'stock-step':        stepStock('stock', parseInt(el.dataset.delta, 10)); break;
+        case 'min-step':          stepStock('min_stock', parseInt(el.dataset.delta, 10)); break;
+        case 'start-po':          startPurchaseOrder(); break;
+        case 'pick-supplier':     pickSupplier(parseInt(el.dataset.id, 10)); break;
+        case 'po-pick-product':   poPickProduct(parseInt(el.dataset.id, 10)); break;
+        case 'po-accept-qty':     poAcceptQty(); break;
+        case 'po-remove-item':    poRemoveItem(parseInt(el.dataset.idx, 10)); break;
+        case 'submit-po':         submitPurchaseOrder(); break;
+        case 'pick-po':           pickPOForReceive(parseInt(el.dataset.id, 10)); break;
+        case 'toggle-recv':       toggleRecvCheck(parseInt(el.dataset.id, 10)); break;
+        case 'submit-receive':    submitReceive(); break;
+        case 'refresh-caja':      refreshCaja(); break;
+      }
+    });
+
+    // ── Boot ─────────────────────────────────────────────────────────────────
+    render();
+  </script>
+</body>
+</html>

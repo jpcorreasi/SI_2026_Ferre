@@ -1,0 +1,16 @@
+.env
+venv/
+__pycache__/
+*.pyc
+*.pyo
+db.sqlite3
+htmlcov/
+.coverage
+staticfiles/
+*.egg-info/
+dist/
+build/
+.DS_Store
+
+# Claude Code local artifacts (agents, settings, agent memories)
+.claude/
