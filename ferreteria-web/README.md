@@ -76,7 +76,9 @@ src/
       de solo lectura con filtros).
 - [x] **Compras:** **Órdenes de compra** (ADMIN; crear con items + recibir/cancelar)
       y **Solicitudes de pedido** (crear ambos roles; `mark-reviewed` ADMIN).
-- [ ] Horarios, Notas crédito, Facturas de proveedor, Auditoría, Usuarios.
+- [x] **Sistema:** **Auditoría** (ADMIN, solo lectura; filtros + detalle de cambios
+      `{old,new}`) y **Usuarios** (ADMIN; CRUD con rol y contraseña).
+- [ ] Horarios, Notas crédito, Facturas de proveedor.
 
 > Las pantallas pendientes ya tienen ruta y entrada en el menú (renderizan un
 > `Placeholder`), así que la navegación y los permisos por rol son verificables hoy.

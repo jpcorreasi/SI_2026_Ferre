@@ -220,6 +220,32 @@ export interface SalesByPayment {
   rows: SalesByPaymentRow[];
 }
 
+// --- accounts (usuarios) ---
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: Role;
+  is_active: boolean;
+}
+
+// --- audit ---
+export type AuditAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW';
+
+export interface AuditLog {
+  id: number;
+  user: number | null;
+  username: string;
+  action: AuditAction;
+  app_label: string;
+  model_name: string;
+  object_id: string;
+  object_repr: string;
+  changed_fields: Record<string, { old: unknown; new: unknown }> | null;
+  timestamp: string;
+  ip_address: string | null;
+}
+
 // --- purchasing (suppliers) ---
 export type PurchaseOrderStatus = 'DRAFT' | 'SENT' | 'RECEIVED' | 'CANCELLED';
 
