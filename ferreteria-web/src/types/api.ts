@@ -220,6 +220,52 @@ export interface SalesByPayment {
   rows: SalesByPaymentRow[];
 }
 
+// --- purchasing (suppliers) ---
+export type PurchaseOrderStatus = 'DRAFT' | 'SENT' | 'RECEIVED' | 'CANCELLED';
+
+export interface PurchaseOrderItem {
+  id: number;
+  product: number;
+  product_name: string | null;
+  quantity: number;
+  unit_cost: string;
+}
+
+export interface PurchaseOrder {
+  id: number;
+  supplier: number;
+  supplier_name: string | null;
+  status: PurchaseOrderStatus;
+  notes: string;
+  items: PurchaseOrderItem[];
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderRequestItem {
+  id: number;
+  product: number;
+  product_name: string | null;
+  product_code: string | null;
+  current_stock: number | null;
+  quantity_requested: number;
+  notes: string;
+}
+
+export interface OrderRequest {
+  id: number;
+  supplier: number;
+  supplier_name: string | null;
+  status: 'PENDING' | 'REVIEWED';
+  notes: string;
+  items: OrderRequestItem[];
+  created_by: number;
+  created_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // --- finances ---
 export type TransactionType = 'INCOME' | 'EXPENSE';
 export type ReferenceType =

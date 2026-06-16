@@ -74,8 +74,9 @@ src/
 - [x] **Finanzas:** **Caja** (abrir/saldo/retiro[ADMIN]/cerrar + historial),
       **Gastos** (ADMIN; CRUD + categorías) y **Transacciones** (libro contable
       de solo lectura con filtros).
-- [ ] Solicitudes, Horarios, Notas crédito, Facturas de proveedor, Órdenes de
-      compra, Auditoría, Usuarios.
+- [x] **Compras:** **Órdenes de compra** (ADMIN; crear con items + recibir/cancelar)
+      y **Solicitudes de pedido** (crear ambos roles; `mark-reviewed` ADMIN).
+- [ ] Horarios, Notas crédito, Facturas de proveedor, Auditoría, Usuarios.
 
 > Las pantallas pendientes ya tienen ruta y entrada en el menú (renderizan un
 > `Placeholder`), así que la navegación y los permisos por rol son verificables hoy.
