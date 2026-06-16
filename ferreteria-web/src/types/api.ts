@@ -174,3 +174,36 @@ export interface Employee {
   user: number;
   full_name: string;
 }
+
+// --- reports ---
+export interface SalesByPaymentRow {
+  payment_method_id: number | null;
+  payment_method_name: string;
+  sale_count: number;
+  total: number;
+  percentage: number;
+}
+
+export interface SalesByPayment {
+  period: { start: string; end: string };
+  grand_total: number;
+  total_sales: number;
+  rows: SalesByPaymentRow[];
+}
+
+// --- invoicing ---
+export interface CustomerInvoice {
+  id: number;
+  invoice_number: string;
+  sale: number;
+  customer: number | null;
+  generated_by: number;
+  total: string;
+  tax: string;
+  discount: string;
+  notes: string;
+  issued_at: string;
+  sent_by_email: boolean;
+  email_sent_to: string;
+  status: 'ISSUED' | 'CANCELLED';
+}

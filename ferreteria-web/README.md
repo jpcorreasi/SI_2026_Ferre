@@ -66,6 +66,9 @@ src/
       **Clientes** (lista + filtros + alta/edición; EMPLEADO solo edita contacto).
 - [x] **Servicios** (lista + filtros + alta/edición; precio autocompletado por tipo)
       y **Proveedores** (ADMIN, lista + CRUD).
+- [x] **Reportes** (ADMIN: resumen de ventas, balance financiero, ventas por
+      modalidad de pago con **export CSV/PDF**) y **Facturas de cliente**
+      (lista + generar desde venta + PDF + enviar por email).
 - [ ] Solicitudes, Horarios.
 - [ ] Facturas de cliente, Notas crédito, Facturas de proveedor.
 - [ ] Proveedores, Órdenes de compra, Empleados, Nóminas.
