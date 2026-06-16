@@ -62,7 +62,11 @@ src/
       refresh, tipos, UI base (modal/paginación/toasts/estados), routing con guard.
 - [x] **Núcleo:** Dashboard (KPIs + top productos + bajo stock), Productos (lista +
       filtros + CRUD modal), Ventas (lista + filtros + detalle + cancelar + PDF).
-- [ ] Nueva venta (carrito 2 pasos), Clientes, Servicios, Solicitudes, Horarios.
+- [x] **Nueva venta** (carrito 2 pasos: productos → cliente/pago → confirmar) y
+      **Clientes** (lista + filtros + alta/edición; EMPLEADO solo edita contacto).
+- [x] **Servicios** (lista + filtros + alta/edición; precio autocompletado por tipo)
+      y **Proveedores** (ADMIN, lista + CRUD).
+- [ ] Solicitudes, Horarios.
 - [ ] Facturas de cliente, Notas crédito, Facturas de proveedor.
 - [ ] Proveedores, Órdenes de compra, Empleados, Nóminas.
 - [ ] Caja, Gastos, Transacciones, Reportes (export CSV/PDF), Auditoría, Usuarios.
