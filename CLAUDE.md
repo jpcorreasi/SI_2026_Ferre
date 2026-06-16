@@ -134,7 +134,7 @@ Rather than Django's `ContentType`, `Transaction` has `reference_type` (choices:
 
 ## Config / environment
 
-- `.env` is **required** — `config/settings.py` reads `SECRET_KEY`, `FIELD_ENCRYPTION_KEY`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS` with no defaults. Copy from `.env.example` and fill in. Generate the Fernet key with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
+- `.env` is **required** — `config/settings.py` reads `SECRET_KEY` and `FIELD_ENCRYPTION_KEY` with no defaults (the app won't start without them). `CORS_ALLOWED_ORIGINS` defaults to `[]` and `DATABASE_URL` defaults to local SQLite (`sqlite:///db.sqlite3`) — so dev runs on SQLite out of the box; set `DATABASE_URL=postgres://…` (psycopg2 is installed) for Postgres. Copy from `.env.example` and fill in. Generate the Fernet key with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
 - `ALLOWED_HOSTS` is currently **hardcoded to `['*']`** in `settings.py` (line 36) for ngrok development — the `.env`-driven version is commented out one line above. Before deploying, restore the env-driven line and run `check_production_readiness`.
 - `CSRF_TRUSTED_ORIGINS` is set to `https://*.ngrok-free.app` for the same reason.
 - Default pagination is `config.pagination.StandardPagination`, `PAGE_SIZE=20`.
@@ -142,7 +142,11 @@ Rather than Django's `ContentType`, `Transaction` has `reference_type` (choices:
 
 ## Frontend
 
-Single template at `frontend/templates/frontend/index.html` — a self-contained SPA using vanilla JS + Tailwind CDN, no build step. It calls the same `/api/...` endpoints with `Authorization: Bearer <jwt>`. File downloads (PDF/CSV) are fetched as a Blob and triggered via an object URL because the auth header can't be set on a plain `<a download>`.
+The `frontend` app serves **two** self-contained SPA templates (vanilla JS + Tailwind CDN, no build step), both via `TemplateView` in `frontend/views.py`:
+- `index.html` at `/` (`FrontendView`) — the main desktop SPA.
+- `mobile.html` at `/m/` (`MobileFrontendView`) — a mobile-oriented variant.
+
+Both call the same `/api/...` endpoints with `Authorization: Bearer <jwt>`. File downloads (PDF/CSV) are fetched as a Blob and triggered via an object URL because the auth header can't be set on a plain `<a download>`. When changing shared API behavior, check whether **both** templates consume the affected endpoint.
 
 ## Reports
 
@@ -157,4 +161,9 @@ The CSV/PDF export endpoints pair with the frontend's "Blob + object URL + JWT" 
 
 ## Things the README claims that may have drifted
 
-The README is dated 2026-04-13 and lists the URL router, but `config/urls.py` has since added routes the README doesn't mention: `work-schedules` (employees), `credit-notes` (invoicing). Treat the README as the design spec, not a current inventory — when in doubt, read `config/urls.py` and the app's `views.py`.
+The README is dated 2026-04-13 and lists the URL router, but `config/urls.py` has since added routes the README doesn't mention: `work-schedules` (employees), `credit-notes` (invoicing). Treat the README as the design spec, not a current inventory — when in doubt, read `config/urls.py` and the app's `views.py`. Note also that `config/urls.py` registers more resources than the README documents (e.g. `order-requests`, `expense-categories`, `expenses`, `service-types`, `services`, `cash-registers`, `audit-logs`).
+
+## Other docs
+
+- `docs/API.md` — endpoint reference (Spanish), base URL and auth flow.
+- `docs_front/` — design PDFs (V1/V2 dashboard & login mockups) for the SPA. Not code; design intent for the frontend.
