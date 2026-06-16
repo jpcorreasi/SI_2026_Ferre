@@ -1,0 +1,132 @@
+/* Añadidos específicos del frontend React (sobre el design system portado). */
+
+#root { height: 100%; }
+
+/* Estados de carga/error/vacío */
+.state-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-8);
+  color: var(--fg-muted);
+  font-size: var(--fs-sm);
+}
+.state-block.state-error { color: var(--danger); }
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Paginación */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-3) 0;
+  flex-wrap: wrap;
+}
+
+/* Toolbar de filtros sobre tablas */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+.toolbar .input-wrap { min-height: 38px; flex: 1; min-width: 200px; }
+.toolbar select,
+.toolbar input[type='date'] {
+  padding: 8px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  color: var(--fg);
+  font-size: var(--fs-sm);
+}
+
+/* Tabla responsive simple */
+.data-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.data-table th {
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--fg-muted);
+  font-weight: 600;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: 0; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table .nmono { font-family: var(--font-mono); }
+.table-card { overflow-x: auto; }
+
+.placeholder-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-12) var(--sp-6);
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+.icon-btn-bare {
+  background: transparent;
+  border: 0;
+  color: var(--fg-muted);
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+}
+.icon-btn-bare:hover { background: var(--surface-sunken); color: var(--fg); }
+
+#hamburger { display: none; }
+
+/* Drawer móvil */
+.fe-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 0.4);
+  z-index: var(--z-overlay);
+}
+.fe-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 264px;
+  max-width: 84vw;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: calc(var(--z-overlay) + 1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  animation: drawerIn var(--t-base) var(--ease);
+}
+@keyframes drawerIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+
+@media (max-width: 768px) {
+  #sidebar { display: none; }
+  #hamburger { display: grid; }
+  #content { padding: var(--sp-4); }
+}
