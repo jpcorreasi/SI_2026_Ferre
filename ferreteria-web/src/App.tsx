@@ -9,6 +9,8 @@ import { NewSale } from './pages/NewSale';
 import { Customers } from './pages/Customers';
 import { Services } from './pages/Services';
 import { Suppliers } from './pages/Suppliers';
+import { Reports } from './pages/Reports';
+import { Invoices } from './pages/Invoices';
 import { Placeholder } from './pages/Placeholder';
 import { ReactNode } from 'react';
 
@@ -19,7 +21,6 @@ function RequireAuth({ children }: { children: ReactNode }) {
 
 // Rutas aún no migradas -> Placeholder (la navegación ya funciona).
 const PENDING: [string, string][] = [
-  ['facturas', 'Facturas de cliente'],
   ['notas-credito', 'Notas crédito'],
   ['ordenes-compra', 'Órdenes de compra'],
   ['solicitudes', 'Solicitudes de pedido'],
@@ -30,7 +31,6 @@ const PENDING: [string, string][] = [
   ['caja', 'Caja'],
   ['gastos', 'Gastos'],
   ['transacciones', 'Transacciones'],
-  ['reportes', 'Reportes'],
   ['auditoria', 'Auditoría'],
   ['usuarios', 'Usuarios'],
 ];
@@ -60,6 +60,8 @@ export function App() {
         <Route path="clientes" element={<Customers />} />
         <Route path="servicios" element={<Services />} />
         <Route path="proveedores" element={<Suppliers />} />
+        <Route path="reportes" element={<Reports />} />
+        <Route path="facturas" element={<Invoices />} />
         {PENDING.map(([path, title]) => (
           <Route key={path} path={path} element={<Placeholder title={title} />} />
         ))}
