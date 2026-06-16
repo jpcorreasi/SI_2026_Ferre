@@ -71,10 +71,11 @@ src/
       (lista + generar desde venta + PDF + enviar por email).
 - [x] **Empleados** (ADMIN; el alta crea el usuario vinculado) y **Nóminas**
       (ADMIN; crear + aprobar → genera el egreso en finanzas).
-- [ ] Solicitudes, Horarios.
-- [ ] Facturas de cliente, Notas crédito, Facturas de proveedor.
-- [ ] Proveedores, Órdenes de compra, Empleados, Nóminas.
-- [ ] Caja, Gastos, Transacciones, Reportes (export CSV/PDF), Auditoría, Usuarios.
+- [x] **Finanzas:** **Caja** (abrir/saldo/retiro[ADMIN]/cerrar + historial),
+      **Gastos** (ADMIN; CRUD + categorías) y **Transacciones** (libro contable
+      de solo lectura con filtros).
+- [ ] Solicitudes, Horarios, Notas crédito, Facturas de proveedor, Órdenes de
+      compra, Auditoría, Usuarios.
 
 > Las pantallas pendientes ya tienen ruta y entrada en el menú (renderizan un
 > `Placeholder`), así que la navegación y los permisos por rol son verificables hoy.

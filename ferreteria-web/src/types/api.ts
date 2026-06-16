@@ -220,6 +220,69 @@ export interface SalesByPayment {
   rows: SalesByPaymentRow[];
 }
 
+// --- finances ---
+export type TransactionType = 'INCOME' | 'EXPENSE';
+export type ReferenceType =
+  | 'SALE' | 'SUPPLIER_INVOICE' | 'PAYROLL' | 'CREDIT_NOTE'
+  | 'WITHDRAWAL' | 'EXPENSE' | 'SERVICE' | 'OTHER';
+export type ExpensePaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'OTHER';
+
+export interface Transaction {
+  id: number;
+  type: TransactionType;
+  amount: string;
+  concept: string;
+  reference_type: ReferenceType;
+  reference_id: number;
+  transaction_date: string;
+  registered_by: number;
+  created_at: string;
+}
+
+export interface ExpenseCategory {
+  id: number;
+  name: string;
+  description: string;
+  created_at: string;
+}
+
+export interface Expense {
+  id: number;
+  description: string;
+  category: number;
+  category_name: string | null;
+  amount: string;
+  expense_date: string;
+  payment_method: ExpensePaymentMethod;
+  receipt_reference: string;
+  notes: string;
+  registered_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CashRegister {
+  id: number;
+  opened_by: number;
+  closed_by: number | null;
+  opening_amount: string;
+  closing_amount: string | null;
+  expected_amount: string | null;
+  difference: string | null;
+  opened_at: string;
+  closed_at: string | null;
+  status: 'OPEN' | 'CLOSED';
+}
+
+export interface CashBalance {
+  register_id: number;
+  opening_amount: string;
+  income: string;
+  expense: string;
+  balance: string;
+  status: 'OPEN' | 'CLOSED';
+}
+
 // --- invoicing ---
 export interface CustomerInvoice {
   id: number;

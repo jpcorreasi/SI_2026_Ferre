@@ -13,6 +13,9 @@ import { Reports } from './pages/Reports';
 import { Invoices } from './pages/Invoices';
 import { Employees } from './pages/Employees';
 import { Payrolls } from './pages/Payrolls';
+import { CashRegister } from './pages/CashRegister';
+import { Expenses } from './pages/Expenses';
+import { Transactions } from './pages/Transactions';
 import { Placeholder } from './pages/Placeholder';
 import { ReactNode } from 'react';
 
@@ -28,9 +31,6 @@ const PENDING: [string, string][] = [
   ['solicitudes', 'Solicitudes de pedido'],
   ['facturas-proveedor', 'Facturas de proveedor'],
   ['horarios', 'Horarios'],
-  ['caja', 'Caja'],
-  ['gastos', 'Gastos'],
-  ['transacciones', 'Transacciones'],
   ['auditoria', 'Auditoría'],
   ['usuarios', 'Usuarios'],
 ];
@@ -64,6 +64,9 @@ export function App() {
         <Route path="facturas" element={<Invoices />} />
         <Route path="empleados" element={<Employees />} />
         <Route path="nominas" element={<Payrolls />} />
+        <Route path="caja" element={<CashRegister />} />
+        <Route path="gastos" element={<Expenses />} />
+        <Route path="transacciones" element={<Transactions />} />
         {PENDING.map(([path, title]) => (
           <Route key={path} path={path} element={<Placeholder title={title} />} />
         ))}
