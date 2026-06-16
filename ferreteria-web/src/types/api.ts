@@ -355,6 +355,81 @@ export interface CashBalance {
   status: 'OPEN' | 'CLOSED';
 }
 
+// --- employees: horarios ---
+export interface WorkShift {
+  id: number;
+  day_of_week: number;
+  day_of_week_label: string;
+  start_time: string;
+  end_time: string;
+}
+
+export interface WorkSchedule {
+  id: number;
+  employee: number;
+  employee_name: string | null;
+  week_start: string;
+  notes: string;
+  created_by: number;
+  created_by_username: string | null;
+  created_at: string;
+  updated_at: string;
+  shifts: WorkShift[];
+}
+
+// --- invoicing: notas crédito ---
+export interface CreditNoteItem {
+  id: number;
+  sale_item: number;
+  product: number;
+  product_name: string | null;
+  quantity_returned: number;
+  unit_price: string;
+  subtotal: string;
+}
+
+export interface CreditNote {
+  id: number;
+  credit_note_number: string;
+  sale: number;
+  invoice: number | null;
+  invoice_number: string | null;
+  reason: string;
+  total_refund: string;
+  generated_by: number;
+  generated_by_name: string | null;
+  issued_at: string;
+  status: 'ISSUED' | 'CANCELLED';
+  items: CreditNoteItem[];
+}
+
+// --- invoicing: facturas de proveedor ---
+export interface SupplierInvoiceItem {
+  id: number;
+  product: number;
+  product_name: string | null;
+  quantity: number;
+  unit_cost: string;
+  subtotal: string;
+}
+
+export interface SupplierInvoice {
+  id: number;
+  supplier_invoice_number: string;
+  supplier: number;
+  supplier_name: string | null;
+  purchase_order: number | null;
+  registered_by: number;
+  registered_by_name: string | null;
+  payment_status: 'PENDING' | 'PAID';
+  tax: string;
+  total: string;
+  received_at: string;
+  items: SupplierInvoiceItem[];
+  created_at: string;
+  updated_at: string;
+}
+
 // --- invoicing ---
 export interface CustomerInvoice {
   id: number;

@@ -20,6 +20,9 @@ import { PurchaseOrders } from './pages/PurchaseOrders';
 import { OrderRequests } from './pages/OrderRequests';
 import { AuditLogs } from './pages/AuditLogs';
 import { Users } from './pages/Users';
+import { WorkSchedules } from './pages/WorkSchedules';
+import { CreditNotes } from './pages/CreditNotes';
+import { SupplierInvoices } from './pages/SupplierInvoices';
 import { Placeholder } from './pages/Placeholder';
 import { ReactNode } from 'react';
 
@@ -27,13 +30,6 @@ function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
-
-// Rutas aún no migradas -> Placeholder (la navegación ya funciona).
-const PENDING: [string, string][] = [
-  ['notas-credito', 'Notas crédito'],
-  ['facturas-proveedor', 'Facturas de proveedor'],
-  ['horarios', 'Horarios'],
-];
 
 export function App() {
   const { isAuthenticated } = useAuth();
@@ -71,9 +67,9 @@ export function App() {
         <Route path="solicitudes" element={<OrderRequests />} />
         <Route path="auditoria" element={<AuditLogs />} />
         <Route path="usuarios" element={<Users />} />
-        {PENDING.map(([path, title]) => (
-          <Route key={path} path={path} element={<Placeholder title={title} />} />
-        ))}
+        <Route path="horarios" element={<WorkSchedules />} />
+        <Route path="notas-credito" element={<CreditNotes />} />
+        <Route path="facturas-proveedor" element={<SupplierInvoices />} />
         <Route path="*" element={<Placeholder title="Página no encontrada" />} />
       </Route>
     </Routes>

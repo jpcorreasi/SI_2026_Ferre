@@ -78,7 +78,9 @@ src/
       y **Solicitudes de pedido** (crear ambos roles; `mark-reviewed` ADMIN).
 - [x] **Sistema:** **Auditoría** (ADMIN, solo lectura; filtros + detalle de cambios
       `{old,new}`) y **Usuarios** (ADMIN; CRUD con rol y contraseña).
-- [ ] Horarios, Notas crédito, Facturas de proveedor.
+- [x] **Finales:** **Horarios** (EMPLEADO ve el suyo; ADMIN crea turnos + copia a
+      la siguiente semana), **Notas crédito** (ADMIN crea seleccionando ítems de una
+      venta a devolver + PDF) y **Facturas de proveedor** (ADMIN; crear con items →
+      incrementa stock).
 
-> Las pantallas pendientes ya tienen ruta y entrada en el menú (renderizan un
-> `Placeholder`), así que la navegación y los permisos por rol son verificables hoy.
+✅ **Frontend completo:** las 19 pantallas del SPA original están migradas a React + TypeScript.
