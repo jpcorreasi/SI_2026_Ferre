@@ -40,6 +40,7 @@ npx prisma migrate dev   # crear/aplicar migración
 npm run seed             # datos de prueba (admin_test/Admin1234!, empleado_test/Emp1234!)
 npm run validate         # 5 chequeos de integridad de datos
 npm run readiness        # 6 condiciones de producción (exit 1 si falla)
+npm run etl:import       # importa etl/dump.json a Postgres (ver ETL.md)
 ```
 
 ## Arquitectura (equivalencias con Django)
@@ -104,7 +105,9 @@ migrar datos sin recifrar y sin forzar reseteo de contraseñas.
 - [x] **F6** `audit-logs` (solo lectura, ADMIN; filtros action/model/username/fechas) +
       comandos `npm run seed` / `validate` / `readiness` (`scripts/`). Verificado en
       `audit-logs.service.spec.ts`.
-- [ ] **F7** ETL de datos desde Django + verificación de paridad contra el SPA.
+- [~] **F7** ETL de datos desde Django (scripts listos, ejecución pendiente de tu Postgres):
+      `etl/export_from_django.py` → `etl/dump.json` → `npm run etl:import`. Verificado el
+      export real (280 filas / 30 tablas) e import typechequeado. **Guía: [ETL.md](ETL.md).**
 
 ## Notas de paridad importantes
 

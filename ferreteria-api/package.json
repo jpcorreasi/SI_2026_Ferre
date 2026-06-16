@@ -22,7 +22,8 @@
     "prisma:studio": "prisma studio",
     "seed": "ts-node scripts/seed.ts",
     "validate": "ts-node scripts/validation.ts",
-    "readiness": "ts-node scripts/readiness.ts"
+    "readiness": "ts-node scripts/readiness.ts",
+    "etl:import": "ts-node scripts/etl-import.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",
