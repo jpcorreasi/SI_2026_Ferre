@@ -103,7 +103,7 @@ Toda la funcionalidad de negocio se reescribió **con paridad verificada por pru
   - Los **signals** de Django pasaron a lógica explícita en los *services* dentro de `prisma.$transaction` (decremento de stock atómico con `SELECT … FOR UPDATE`, sincronización del libro de `Transaction`, numeración atómica de facturas `FV-`/`NC-` con `pg_advisory_xact_lock`).
   - **Compatibilidad criptográfica con Django verificada de extremo a extremo** (Fernet + PBKDF2 con la misma clave/algoritmo) → se migran datos **sin recifrar ni resetear contraseñas**.
   - Auditoría, permisos por rol (ADMIN/EMPLEADO), bloqueo de cuenta (HTTP 423), exportación CSV (con BOM) y PDF.
-- **Frontend (fundación + núcleo):** login (con manejo de 401/423), layout responsive con modo oscuro, cliente HTTP con **refresco automático de JWT**, y pantallas Dashboard, Productos y Ventas; el resto con ruta y menú listos.
+- **Frontend (completo, 19 pantallas):** login (con manejo de 401/423), layout responsive con modo oscuro, cliente HTTP con **refresco automático de JWT**, estado de servidor con **TanStack Query**, descargas blob+JWT y los permisos por rol (ADMIN/EMPLEADO) en la UI. Cubre todo el SPA original (ventas, inventario, facturación, finanzas, compras, personal, reportes, auditoría…).
 - **Migración de datos:** scripts ETL que copian la BD de Django a PostgreSQL (los nombres de tabla/columna ya están alineados vía `@@map`).
 
 > Métricas detalladas y comandos: [`ferreteria-api/README.md`](ferreteria-api/README.md) y [`ferreteria-web/README.md`](ferreteria-web/README.md).
@@ -189,9 +189,11 @@ En conjunto: **menos fricción para mantener** (un lenguaje, un tooling, tipos c
 |---|---|
 | Backend NestJS + Prisma (`ferreteria-api`) | ✅ **Completo** — 11 áreas migradas, 68 tests ✓ |
 | Migración de datos (`etl`) | ✅ Scripts listos (ejecución contra tu PostgreSQL) |
-| Frontend React (`ferreteria-web`) | 🟡 **Fundación + núcleo** (login, dashboard, productos, ventas); resto de pantallas en progreso |
+| Frontend React (`ferreteria-web`) | ✅ **Completo** — 19/19 pantallas migradas |
 
-**Roadmap del frontend:** nueva venta (carrito), clientes, servicios, solicitudes, horarios, facturas (cliente/proveedor), notas crédito, proveedores, órdenes de compra, empleados, nóminas, caja, gastos, transacciones, reportes, auditoría, usuarios. Todas ya tienen ruta y entrada de menú.
+La **refactorización full‑stack v2 está completa**: backend, datos y frontend reescritos en TypeScript de extremo a extremo.
+
+**Pantallas del frontend (19):** Dashboard · Productos · Ventas · Nueva venta · Clientes · Servicios · Proveedores · Reportes · Facturas de cliente · Empleados · Nóminas · Caja · Gastos · Transacciones · Órdenes de compra · Solicitudes · Auditoría · Usuarios · Horarios · Notas crédito · Facturas de proveedor — sobre la fundación (auth JWT con refresh, layout responsive con modo oscuro, TanStack Query, descargas blob).
 
 ---
 
