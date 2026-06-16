@@ -1,12 +1,73 @@
 # Ferretería — Sistema de Gestión para Ferretería
 
-Sistema de gestión integral para una ferretería, desarrollado en **Django 6.0.4** con **Django REST Framework**.  
-Cubre inventario, ventas, facturación, proveedores, empleados, finanzas, servicios, gastos operativos, solicitudes de pedido y auditoría.
+Sistema de gestión integral para una ferretería. Cubre inventario, ventas, facturación, proveedores, empleados, finanzas, servicios, gastos operativos, solicitudes de pedido y auditoría.
+
+> **Versionado**
+> - **v1.0** — Backend original en **Django 6.0.4 + Django REST Framework** (este documento es su especificación de diseño y sigue siendo la fuente de verdad del contrato de la API).
+> - **v2.0** — **Refactorización full‑stack a Node.js + TypeScript** (ver abajo). El backend fue reescrito por completo en `ferreteria-api/` conservando el mismo contrato `/api/...`.
+
+---
+
+## ⭐ Versión 2.0 — Refactorización a Node.js + TypeScript
+
+La **v2.0** reescribe el backend de **Django/DRF → NestJS + Prisma + PostgreSQL**, con el objetivo de unificar todo el stack (backend **y** frontend) en **un solo lenguaje: TypeScript**. El nuevo backend vive en [`ferreteria-api/`](ferreteria-api/README.md) y conserva el **mismo contrato `/api/...`**, de modo que el SPA actual sigue funcionando sin cambios mientras se completa la transición.
+
+### ¿Qué se reescribió?
+
+Toda la lógica de negocio se migró con paridad funcional verificada por pruebas (68 tests, Jest):
+
+| Área | v1.0 (Django) | v2.0 (NestJS) |
+|---|---|---|
+| Framework / Web | Django + DRF | **NestJS 10** (modular, DI) |
+| Lenguaje | Python | **TypeScript 5.5** |
+| ORM / Datos | Django ORM | **Prisma 5** (esquema tipado, migraciones) |
+| Base de datos | SQLite/PostgreSQL | **PostgreSQL** |
+| Auth | SimpleJWT | **JWT** (`@nestjs/jwt` + Passport) — login con bloqueo (HTTP 423) |
+| Validación | Serializers DRF | **class-validator / class-transformer** |
+| Reglas de negocio | `signals.py` | Lógica explícita en *services* dentro de `prisma.$transaction` |
+| Auditoría | `AuditLogMixin` | Interceptor/`AuditService` con diff `{old,new}` |
+| Permisos por rol | Permission classes | **Guards** + `@Roles()` |
+| Cifrado de campos | `EncryptedCharField` (Fernet) | **Fernet compatible** (misma clave, verificado contra Python) |
+| PDF (facturas/reportes) | ReportLab | **pdfkit** |
+| Pruebas | `manage.py test` | **Jest + Supertest** (68 ✓) |
+
+> Migración de datos incluida: `etl/export_from_django.py` + `npm run etl:import` copian la BD de Django a PostgreSQL (los `@@map` del esquema alinean tablas/columnas). Guía: [`ferreteria-api/ETL.md`](ferreteria-api/ETL.md).
+
+### Stack tecnológico v2.0
+
+- **Runtime:** Node.js 24 · **Lenguaje:** TypeScript 5.5
+- **Backend:** NestJS 10 + Prisma 5 + PostgreSQL
+- **Frontend:** SPA (vanilla JS + Tailwind hoy; con ruta natural hacia **React + TypeScript**)
+- **Auth/Seguridad:** JWT, bloqueo de cuenta, cifrado Fernet de campos sensibles, auditoría automática
+- **Calidad:** Jest, class-validator, ESLint/Prettier
+
+### ¿Por qué unificar todo en Node.js + TypeScript?
+
+El motor de esta refactorización es tener **un único lenguaje (TypeScript) de extremo a extremo** — backend y frontend. Las ventajas concretas:
+
+**🔧 Mantenibilidad (un solo lenguaje)**
+- **Una sola base de conocimiento:** el mismo equipo (o desarrollador) trabaja back y front sin cambiar de mentalidad, sintaxis ni herramientas. Menos carga cognitiva, menos errores de contexto.
+- **Tipos compartidos end‑to‑end:** las interfaces/DTOs del dominio pueden reutilizarse entre servidor y cliente, así un cambio en el contrato de la API **rompe la compilación** en el front en vez de fallar silenciosamente en runtime.
+- **Un único toolchain:** mismo gestor de paquetes (npm), mismo linter/formatter (ESLint/Prettier), mismo runner de tests (Jest), mismo CI. Menos configuración duplicada.
+- **Contratación y onboarding más simples:** se busca *un* perfil (TypeScript full‑stack) en lugar de Python **y** JavaScript por separado.
+- **Refactors seguros:** el tipado estático y el autocompletado (Prisma genera tipos del esquema) hacen que renombrar/mover código sea verificable por el compilador.
+
+**📈 Escalabilidad**
+- **Concurrencia de I/O eficiente:** el modelo *event‑loop* no bloqueante de Node.js maneja muchas peticiones simultáneas (APIs intensivas en I/O) con menos recursos por instancia.
+- **Arquitectura modular (NestJS):** módulos + inyección de dependencias facilitan crecer en features, aislar dominios y, si hiciera falta, **extraer microservicios** sin reescribir.
+- **Escalado horizontal sencillo:** procesos Node ligeros y *stateless* (JWT) escalan replicando instancias; encaja bien con contenedores y entornos *serverless*.
+- **Ecosistema unificado:** un solo registro (npm) para back y front agiliza compartir librerías de validación, formato y lógica de dominio.
+- **Datos con Prisma:** migraciones versionadas y consultas tipadas reducen el SQL manual y los errores al evolucionar el esquema a escala.
+
+En conjunto: **menos fricción para mantener** (un lenguaje, un tooling, tipos compartidos) y **más capacidad de crecer** (concurrencia, modularidad, despliegue homogéneo) — sin perder la funcionalidad ni el contrato que ya consumía el frontend.
+
+> Detalle técnico completo del backend v2.0, comandos y hoja de ruta: [`ferreteria-api/README.md`](ferreteria-api/README.md).
 
 ---
 
 ## Índice
 
+0. [⭐ Versión 2.0 — Refactorización a Node.js + TypeScript](#-versión-20--refactorización-a-nodejs--typescript)
 1. [Estado actual del proyecto](#1-estado-actual-del-proyecto)
 2. [Stack tecnológico](#2-stack-tecnológico)
 3. [Estructura del proyecto](#3-estructura-del-proyecto)
