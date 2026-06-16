@@ -1,0 +1,706 @@
+// Ferreteria SI-2026 — Prisma schema
+// Migracion fiel del modelo de datos Django/DRF.
+// Convenciones:
+//   - Campos del cliente en camelCase; columnas mapeadas a snake_case (paridad Django) con @map.
+//   - Tablas mapeadas a "<app>_<model>" (nombre por defecto de Django) con @@map -> ETL casi 1:1.
+//   - Dinero: Decimal @db.Decimal(12, 2). onDelete: PROTECT->Restrict, CASCADE->Cascade, SET_NULL->SetNull.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+enum Role {
+  ADMIN
+  EMPLEADO
+}
+
+enum DocumentType {
+  CC
+  NIT
+  CE
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  RECEIVED
+  CANCELLED
+}
+
+enum OrderRequestStatus {
+  PENDING
+  REVIEWED
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+enum CreditNoteStatus {
+  ISSUED
+  CANCELLED
+}
+
+enum CustomerInvoiceStatus {
+  ISSUED
+  CANCELLED
+}
+
+enum SupplierInvoicePaymentStatus {
+  PENDING
+  PAID
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionReferenceType {
+  SALE
+  SUPPLIER_INVOICE
+  PAYROLL
+  CREDIT_NOTE
+  WITHDRAWAL
+  EXPENSE
+  SERVICE
+  OTHER
+}
+
+enum CashRegisterStatus {
+  OPEN
+  CLOSED
+}
+
+enum ExpensePaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+}
+
+// ---------------------------------------------------------------------------
+// accounts
+// ---------------------------------------------------------------------------
+model User {
+  id                  Int       @id @default(autoincrement())
+  password            String
+  lastLogin           DateTime? @map("last_login")
+  isSuperuser         Boolean   @default(false) @map("is_superuser")
+  username            String    @unique
+  firstName           String    @default("") @map("first_name")
+  lastName            String    @default("") @map("last_name")
+  email               String    @default("")
+  isStaff             Boolean   @default(false) @map("is_staff")
+  isActive            Boolean   @default(true) @map("is_active")
+  dateJoined          DateTime  @default(now()) @map("date_joined")
+  role                Role      @default(EMPLEADO)
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until")
+
+  // back-relations
+  auditSessions             AuditSession[]
+  customersCreated          Customer[]
+  suppliersCreated          Supplier[]
+  purchaseOrdersCreated     PurchaseOrder[]
+  orderRequestsCreated      OrderRequest[]
+  productsCreated           Product[]
+  salesMade                 Sale[]
+  employeeProfile           Employee?
+  payrollsGenerated         Payroll[]
+  schedulesCreated          WorkSchedule[]
+  creditNotesGenerated      CreditNote[]
+  invoicesGenerated         CustomerInvoice[]
+  supplierInvoicesRegistered SupplierInvoice[]
+  transactionsRegistered    Transaction[]
+  openedRegisters           CashRegister[] @relation("CashRegisterOpenedBy")
+  closedRegisters           CashRegister[] @relation("CashRegisterClosedBy")
+  expensesRegistered        Expense[]
+  servicesPerformed         Service[]      @relation("ServicePerformedBy")
+  servicesRegistered        Service[]      @relation("ServiceRegisteredBy")
+  auditLogs                 AuditLog[]
+
+  @@map("accounts_customuser")
+}
+
+model AuditSession {
+  id        Int       @id @default(autoincrement())
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId    Int?      @map("user_id")
+  loginAt   DateTime  @map("login_at")
+  logoutAt  DateTime? @map("logout_at")
+  ipAddress String    @map("ip_address")
+
+  @@index([userId])
+  @@map("accounts_auditsession")
+}
+
+// ---------------------------------------------------------------------------
+// customers
+// ---------------------------------------------------------------------------
+model Customer {
+  id             Int          @id @default(autoincrement())
+  fullName       String       @map("full_name")
+  documentType   DocumentType @map("document_type")
+  documentNumber String       @map("document_number") // cifrado en reposo (Fernet)
+  email          String       @default("")
+  phone          String       @default("")
+  address        String       @default("")
+  isActive       Boolean      @default(true) @map("is_active")
+  createdBy      User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById    Int          @map("created_by_id")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  sales     Sale[]
+  invoices  CustomerInvoice[]
+  services  Service[]
+
+  @@index([createdById])
+  @@map("customers_customer")
+}
+
+// ---------------------------------------------------------------------------
+// suppliers
+// ---------------------------------------------------------------------------
+model Supplier {
+  id           Int      @id @default(autoincrement())
+  businessName String   @map("business_name")
+  nit          String   @unique
+  contactName  String   @default("") @map("contact_name")
+  phone        String   @default("")
+  email        String   @default("")
+  address      String   @default("")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdBy    User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById  Int      @map("created_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  products         Product[]
+  purchaseOrders   PurchaseOrder[]
+  orderRequests    OrderRequest[]
+  supplierInvoices SupplierInvoice[]
+
+  @@index([createdById])
+  @@map("suppliers_supplier")
+}
+
+model PurchaseOrder {
+  id          Int                 @id @default(autoincrement())
+  supplier    Supplier            @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  supplierId  Int                 @map("supplier_id")
+  status      PurchaseOrderStatus @default(DRAFT)
+  notes       String              @default("")
+  createdBy   User                @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById Int                 @map("created_by_id")
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+
+  items            PurchaseOrderItem[]
+  supplierInvoices SupplierInvoice[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([createdById])
+  @@map("suppliers_purchaseorder")
+}
+
+model PurchaseOrderItem {
+  id        Int           @id @default(autoincrement())
+  order     PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int           @map("order_id")
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId Int           @map("product_id")
+  quantity  Int
+  unitCost  Decimal       @map("unit_cost") @db.Decimal(12, 2)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("suppliers_purchaseorderitem")
+}
+
+model OrderRequest {
+  id          Int                @id @default(autoincrement())
+  supplier    Supplier           @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  supplierId  Int                @map("supplier_id")
+  status      OrderRequestStatus @default(PENDING)
+  notes       String             @default("")
+  createdBy   User               @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById Int                @map("created_by_id")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  items OrderRequestItem[]
+
+  @@index([supplierId])
+  @@index([status])
+  @@index([createdById])
+  @@map("suppliers_orderrequest")
+}
+
+model OrderRequestItem {
+  id               Int          @id @default(autoincrement())
+  orderRequest     OrderRequest @relation(fields: [orderRequestId], references: [id], onDelete: Cascade)
+  orderRequestId   Int          @map("order_request_id")
+  product          Product      @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId        Int          @map("product_id")
+  quantityRequested Int         @map("quantity_requested")
+  notes            String       @default("")
+
+  @@index([orderRequestId])
+  @@index([productId])
+  @@map("suppliers_orderrequestitem")
+}
+
+// ---------------------------------------------------------------------------
+// products
+// ---------------------------------------------------------------------------
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String   @default("")
+
+  products Product[]
+
+  @@map("products_category")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique
+  description String   @default("")
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId  Int      @map("category_id")
+  salePrice   Decimal  @map("sale_price") @db.Decimal(12, 2)
+  costPrice   Decimal  @map("cost_price") @db.Decimal(12, 2)
+  stock       Int      @default(0)
+  minStock    Int      @default(5) @map("min_stock")
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierId  Int?     @map("supplier_id")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById Int      @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  saleItems            SaleItem[]
+  purchaseOrderItems   PurchaseOrderItem[]
+  orderRequestItems    OrderRequestItem[]
+  creditNoteItems      CreditNoteItem[]
+  supplierInvoiceItems SupplierInvoiceItem[]
+
+  @@index([categoryId])
+  @@index([createdById])
+  @@map("products_product")
+}
+
+// ---------------------------------------------------------------------------
+// sales
+// ---------------------------------------------------------------------------
+model PaymentMethod {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  sales Sale[]
+
+  @@map("sales_paymentmethod")
+}
+
+model Sale {
+  id              Int           @id @default(autoincrement())
+  customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId      Int?          @map("customer_id")
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id], onDelete: Restrict)
+  paymentMethodId Int           @map("payment_method_id")
+  employee        User          @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeId      Int           @map("employee_id")
+  total           Decimal       @db.Decimal(12, 2)
+  status          SaleStatus    @default(COMPLETED)
+  isAnonymous     Boolean       @default(false) @map("is_anonymous")
+  saleDate        DateTime      @default(now()) @map("sale_date")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  items       SaleItem[]
+  creditNotes CreditNote[]
+  invoice     CustomerInvoice?
+
+  @@index([customerId])
+  @@index([status])
+  @@index([saleDate])
+  @@index([employeeId])
+  @@index([paymentMethodId])
+  @@map("sales_sale")
+}
+
+model SaleItem {
+  id        Int     @id @default(autoincrement())
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  saleId    Int     @map("sale_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId Int     @map("product_id")
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(12, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+
+  creditNoteItems CreditNoteItem[]
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("sales_saleitem")
+}
+
+// ---------------------------------------------------------------------------
+// employees
+// ---------------------------------------------------------------------------
+model Employee {
+  id             Int          @id @default(autoincrement())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  userId         Int          @unique @map("user_id")
+  fullName       String       @map("full_name")
+  documentType   DocumentType @map("document_type")
+  documentNumber String       @map("document_number") // cifrado en reposo (Fernet)
+  position       String
+  hireDate       DateTime     @map("hire_date") @db.Date
+  baseSalary     Decimal      @map("base_salary") @db.Decimal(12, 2)
+  phone          String       @default("")
+  isActive       Boolean      @default(true) @map("is_active")
+
+  payrollItems PayrollItem[]
+  schedules    WorkSchedule[]
+
+  @@map("employees_employee")
+}
+
+model Payroll {
+  id          Int           @id @default(autoincrement())
+  periodStart DateTime      @map("period_start") @db.Date
+  periodEnd   DateTime      @map("period_end") @db.Date
+  status      PayrollStatus @default(DRAFT)
+  totalAmount Decimal       @map("total_amount") @db.Decimal(12, 2)
+  generatedBy User          @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+  generatedById Int         @map("generated_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  items PayrollItem[]
+
+  @@index([status])
+  @@index([generatedById])
+  @@map("employees_payroll")
+}
+
+model PayrollItem {
+  id               Int      @id @default(autoincrement())
+  payroll          Payroll  @relation(fields: [payrollId], references: [id], onDelete: Cascade)
+  payrollId        Int      @map("payroll_id")
+  employee         Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeId       Int      @map("employee_id")
+  baseSalary       Decimal  @map("base_salary") @db.Decimal(12, 2)
+  healthDeduction  Decimal  @map("health_deduction") @db.Decimal(12, 2)
+  pensionDeduction Decimal  @map("pension_deduction") @db.Decimal(12, 2)
+  overtime         Decimal  @default(0) @db.Decimal(12, 2)
+  netSalary        Decimal  @map("net_salary") @db.Decimal(12, 2)
+
+  @@unique([payrollId, employeeId])
+  @@index([employeeId])
+  @@map("employees_payrollitem")
+}
+
+model WorkSchedule {
+  id          Int      @id @default(autoincrement())
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Restrict)
+  employeeId  Int      @map("employee_id")
+  weekStart   DateTime @map("week_start") @db.Date
+  notes       String   @default("")
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdById Int      @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  shifts WorkShift[]
+
+  @@unique([employeeId, weekStart])
+  @@index([employeeId])
+  @@index([weekStart])
+  @@index([createdById])
+  @@map("employees_workschedule")
+}
+
+model WorkShift {
+  id         Int          @id @default(autoincrement())
+  schedule   WorkSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  scheduleId Int          @map("schedule_id")
+  dayOfWeek  Int          @map("day_of_week") // 1=Lunes ... 7=Domingo
+  startTime  DateTime     @map("start_time") @db.Time(6)
+  endTime    DateTime     @map("end_time") @db.Time(6)
+
+  @@unique([scheduleId, dayOfWeek])
+  @@index([dayOfWeek])
+  @@map("employees_workshift")
+}
+
+// ---------------------------------------------------------------------------
+// invoicing
+// ---------------------------------------------------------------------------
+model CustomerInvoice {
+  id            Int                   @id @default(autoincrement())
+  invoiceNumber String                @unique @map("invoice_number") // FV-YYYYMMDD-XXXX
+  sale          Sale                  @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  saleId        Int                   @unique @map("sale_id")
+  customer      Customer?             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  customerId    Int?                  @map("customer_id")
+  generatedBy   User                  @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+  generatedById Int                   @map("generated_by_id")
+  total         Decimal               @db.Decimal(12, 2)
+  tax           Decimal               @default(0) @db.Decimal(12, 2)
+  discount      Decimal               @default(0) @db.Decimal(12, 2)
+  notes         String                @default("")
+  issuedAt      DateTime              @default(now()) @map("issued_at")
+  sentByEmail   Boolean               @default(false) @map("sent_by_email")
+  emailSentTo   String                @default("") @map("email_sent_to")
+  status        CustomerInvoiceStatus @default(ISSUED)
+
+  creditNotes CreditNote[]
+
+  @@index([customerId])
+  @@index([status])
+  @@map("invoicing_customerinvoice")
+}
+
+model CreditNote {
+  id               Int              @id @default(autoincrement())
+  creditNoteNumber String           @unique @map("credit_note_number") // NC-YYYYMMDD-XXXX
+  sale             Sale             @relation(fields: [saleId], references: [id], onDelete: Restrict)
+  saleId           Int              @map("sale_id")
+  invoice          CustomerInvoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  invoiceId        Int?             @map("invoice_id")
+  reason           String
+  totalRefund      Decimal          @map("total_refund") @db.Decimal(12, 2)
+  generatedBy      User             @relation(fields: [generatedById], references: [id], onDelete: Restrict)
+  generatedById    Int              @map("generated_by_id")
+  issuedAt         DateTime         @default(now()) @map("issued_at")
+  status           CreditNoteStatus @default(ISSUED)
+
+  items CreditNoteItem[]
+
+  @@index([saleId])
+  @@index([status])
+  @@map("invoicing_creditnote")
+}
+
+model CreditNoteItem {
+  id              Int        @id @default(autoincrement())
+  creditNote      CreditNote @relation(fields: [creditNoteId], references: [id], onDelete: Cascade)
+  creditNoteId    Int        @map("credit_note_id")
+  saleItem        SaleItem   @relation(fields: [saleItemId], references: [id], onDelete: Restrict)
+  saleItemId      Int        @map("sale_item_id")
+  product         Product    @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId       Int        @map("product_id")
+  quantityReturned Int       @map("quantity_returned")
+  unitPrice       Decimal    @map("unit_price") @db.Decimal(12, 2)
+  subtotal        Decimal    @db.Decimal(12, 2)
+
+  @@index([creditNoteId])
+  @@index([saleItemId])
+  @@index([productId])
+  @@map("invoicing_creditnoteitem")
+}
+
+model SupplierInvoice {
+  id                    Int                          @id @default(autoincrement())
+  supplierInvoiceNumber String                       @map("supplier_invoice_number")
+  supplier              Supplier                     @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  supplierId            Int                          @map("supplier_id")
+  purchaseOrder         PurchaseOrder?               @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  purchaseOrderId       Int?                         @map("purchase_order_id")
+  registeredBy          User                         @relation(fields: [registeredById], references: [id], onDelete: Restrict)
+  registeredById        Int                          @map("registered_by_id")
+  paymentStatus         SupplierInvoicePaymentStatus @default(PENDING) @map("payment_status")
+  tax                   Decimal                      @default(0) @db.Decimal(12, 2)
+  total                 Decimal                      @db.Decimal(12, 2)
+  receivedAt            DateTime                     @map("received_at") @db.Date
+  createdAt             DateTime                     @default(now()) @map("created_at")
+  updatedAt             DateTime                     @updatedAt @map("updated_at")
+
+  items SupplierInvoiceItem[]
+
+  @@unique([supplierId, supplierInvoiceNumber])
+  @@index([supplierId])
+  @@index([paymentStatus])
+  @@index([receivedAt])
+  @@map("invoicing_supplierinvoice")
+}
+
+model SupplierInvoiceItem {
+  id        Int             @id @default(autoincrement())
+  invoice   SupplierInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId Int             @map("invoice_id")
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Restrict)
+  productId Int             @map("product_id")
+  quantity  Int
+  unitCost  Decimal         @map("unit_cost") @db.Decimal(12, 2)
+  subtotal  Decimal         @db.Decimal(12, 2)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@map("invoicing_supplierinvoiceitem")
+}
+
+// ---------------------------------------------------------------------------
+// finances
+// ---------------------------------------------------------------------------
+model Transaction {
+  id              Int                      @id @default(autoincrement())
+  type            TransactionType
+  amount          Decimal                  @db.Decimal(12, 2)
+  concept         String
+  referenceType   TransactionReferenceType @map("reference_type")
+  referenceId     Int                      @map("reference_id")
+  transactionDate DateTime                 @map("transaction_date") @db.Date
+  registeredBy    User                     @relation(fields: [registeredById], references: [id], onDelete: Restrict)
+  registeredById  Int                      @map("registered_by_id")
+  createdAt       DateTime                 @default(now()) @map("created_at")
+
+  @@index([type])
+  @@index([transactionDate])
+  @@index([registeredById])
+  @@index([referenceType, referenceId])
+  @@map("finances_transaction")
+}
+
+model CashRegister {
+  id             Int                @id @default(autoincrement())
+  openedBy       User               @relation("CashRegisterOpenedBy", fields: [openedById], references: [id], onDelete: Restrict)
+  openedById     Int                @map("opened_by_id")
+  closedBy       User?              @relation("CashRegisterClosedBy", fields: [closedById], references: [id], onDelete: SetNull)
+  closedById     Int?               @map("closed_by_id")
+  openingAmount  Decimal            @map("opening_amount") @db.Decimal(12, 2)
+  closingAmount  Decimal?           @map("closing_amount") @db.Decimal(12, 2)
+  expectedAmount Decimal?           @map("expected_amount") @db.Decimal(12, 2)
+  difference     Decimal?           @db.Decimal(12, 2)
+  openedAt       DateTime           @default(now()) @map("opened_at")
+  closedAt       DateTime?          @map("closed_at")
+  status         CashRegisterStatus @default(OPEN)
+
+  @@index([status])
+  @@map("finances_cashregister")
+}
+
+model ExpenseCategory {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String   @default("")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  expenses Expense[]
+
+  @@map("finances_expensecategory")
+}
+
+model Expense {
+  id              Int                  @id @default(autoincrement())
+  description     String
+  category        ExpenseCategory      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  categoryId      Int                  @map("category_id")
+  amount          Decimal              @db.Decimal(12, 2)
+  expenseDate     DateTime             @map("expense_date") @db.Date
+  paymentMethod   ExpensePaymentMethod @map("payment_method")
+  receiptReference String              @default("") @map("receipt_reference")
+  notes           String               @default("")
+  registeredBy    User                 @relation(fields: [registeredById], references: [id], onDelete: Restrict)
+  registeredById  Int                  @map("registered_by_id")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  @@index([expenseDate])
+  @@index([categoryId])
+  @@index([registeredById])
+  @@map("finances_expense")
+}
+
+// ---------------------------------------------------------------------------
+// services
+// ---------------------------------------------------------------------------
+model ServiceType {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  description  String   @default("")
+  defaultPrice Decimal? @map("default_price") @db.Decimal(12, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  services Service[]
+
+  @@map("services_servicetype")
+}
+
+model Service {
+  id             Int         @id @default(autoincrement())
+  serviceType    ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Restrict)
+  serviceTypeId  Int         @map("service_type_id")
+  description    String
+  price          Decimal     @db.Decimal(12, 2)
+  customer       Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerId     Int?        @map("customer_id")
+  performedBy    User        @relation("ServicePerformedBy", fields: [performedById], references: [id], onDelete: Restrict)
+  performedById  Int         @map("performed_by_id")
+  serviceDate    DateTime    @map("service_date") @db.Date
+  notes          String      @default("")
+  registeredBy   User        @relation("ServiceRegisteredBy", fields: [registeredById], references: [id], onDelete: Restrict)
+  registeredById Int         @map("registered_by_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  @@index([serviceTypeId])
+  @@index([customerId])
+  @@index([serviceDate])
+  @@index([performedById])
+  @@index([registeredById])
+  @@map("services_service")
+}
+
+// ---------------------------------------------------------------------------
+// audit
+// ---------------------------------------------------------------------------
+model AuditLog {
+  id            Int         @id @default(autoincrement())
+  user          User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId        Int?        @map("user_id")
+  action        AuditAction
+  appLabel      String      @map("app_label")
+  modelName     String      @map("model_name")
+  objectId      String      @map("object_id")
+  objectRepr    String      @map("object_repr")
+  changedFields Json?       @map("changed_fields")
+  timestamp     DateTime    @default(now())
+  ipAddress     String?     @map("ip_address")
+
+  @@index([action])
+  @@index([modelName])
+  @@index([timestamp])
+  @@index([userId])
+  @@map("audit_auditlog")
+}
