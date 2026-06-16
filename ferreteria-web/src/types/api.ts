@@ -125,3 +125,52 @@ export interface FinancialBalance {
   balance: number;
   filters: { month: string | null; year: string | null };
 }
+
+// --- services ---
+export interface ServiceType {
+  id: number;
+  name: string;
+  description: string;
+  default_price: string | null;
+  created_at: string;
+}
+
+export interface Service {
+  id: number;
+  service_type: number;
+  service_type_name: string | null;
+  description: string;
+  price: string;
+  customer: number | null;
+  customer_name: string | null;
+  performed_by: number;
+  performed_by_name: string | null;
+  service_date: string;
+  notes: string;
+  registered_by: number;
+  registered_by_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// --- suppliers ---
+export interface Supplier {
+  id: number;
+  business_name: string;
+  nit: string;
+  contact_name: string;
+  phone: string;
+  email: string;
+  address: string;
+  is_active: boolean;
+  created_by?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+// --- employees (mínimo, para selección de "realizado por") ---
+export interface Employee {
+  id: number;
+  user: number;
+  full_name: string;
+}

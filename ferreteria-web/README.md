@@ -64,7 +64,9 @@ src/
       filtros + CRUD modal), Ventas (lista + filtros + detalle + cancelar + PDF).
 - [x] **Nueva venta** (carrito 2 pasos: productos → cliente/pago → confirmar) y
       **Clientes** (lista + filtros + alta/edición; EMPLEADO solo edita contacto).
-- [ ] Servicios, Solicitudes, Horarios.
+- [x] **Servicios** (lista + filtros + alta/edición; precio autocompletado por tipo)
+      y **Proveedores** (ADMIN, lista + CRUD).
+- [ ] Solicitudes, Horarios.
 - [ ] Facturas de cliente, Notas crédito, Facturas de proveedor.
 - [ ] Proveedores, Órdenes de compra, Empleados, Nóminas.
 - [ ] Caja, Gastos, Transacciones, Reportes (export CSV/PDF), Auditoría, Usuarios.
