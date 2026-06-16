@@ -168,11 +168,40 @@ export interface Supplier {
   updated_at?: string;
 }
 
-// --- employees (mínimo, para selección de "realizado por") ---
+// --- employees ---
 export interface Employee {
   id: number;
   user: number;
+  username_display?: string | null;
   full_name: string;
+  document_type?: DocumentType;
+  document_number?: string;
+  position?: string;
+  hire_date?: string;
+  base_salary?: string;
+  phone?: string;
+  is_active?: boolean;
+}
+
+export interface PayrollItem {
+  id: number;
+  employee: number;
+  base_salary: string;
+  health_deduction: string;
+  pension_deduction: string;
+  overtime: string;
+  net_salary: string;
+}
+
+export interface Payroll {
+  id: number;
+  period_start: string;
+  period_end: string;
+  status: 'DRAFT' | 'APPROVED' | 'PAID';
+  total_amount: string;
+  generated_by: number;
+  items: PayrollItem[];
+  created_at: string;
 }
 
 // --- reports ---

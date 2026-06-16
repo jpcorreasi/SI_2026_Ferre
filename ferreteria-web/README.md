@@ -69,6 +69,8 @@ src/
 - [x] **Reportes** (ADMIN: resumen de ventas, balance financiero, ventas por
       modalidad de pago con **export CSV/PDF**) y **Facturas de cliente**
       (lista + generar desde venta + PDF + enviar por email).
+- [x] **Empleados** (ADMIN; el alta crea el usuario vinculado) y **Nóminas**
+      (ADMIN; crear + aprobar → genera el egreso en finanzas).
 - [ ] Solicitudes, Horarios.
 - [ ] Facturas de cliente, Notas crédito, Facturas de proveedor.
 - [ ] Proveedores, Órdenes de compra, Empleados, Nóminas.
